@@ -9,7 +9,7 @@
     "use strict";
 
     if (!$) {
-        throw "This plugin requires jqUi";
+        throw "This plugin requires AFUi";
     }
 
     function wire8Tiles() {
@@ -33,7 +33,7 @@
             var oldUpdate = $.ui.updateNavbarElements;
             $.ui.updateNavbarElements = function() {
                 oldUpdate.apply($.ui, arguments);
-                if ($.query("#afui #navbar #metroMenu").length == 1) return;
+                if ($.query("#afui #navbar #metroMenu").length === 1) return;
                 $.query("#afui #navbar footer").append("<a id='metroMenu' onclick='$.ui.toggleSideMenu()'>•••</a>");
             };
             $.ui.isSideMenuOn = function() {
@@ -161,6 +161,8 @@
             wire8Tiles();
         });
     } else {
-        wire8Tiles();
+        $.ui.ready(function(){
+            wire8Tiles();
+        });
     }
 })(af);

@@ -1,11 +1,10 @@
 /**
  * af.scroller 
- * created by appMobi with modifications by Carlos Ouro @ Badoo and Intel
+ * created by Intel with modifications by Carlos Ouro @ Badoo and Intel
  * Supports iOS native touch scrolling
  * Optimizations and bug improvements by Intel
  * @copyright Intel
  */
- /* global af*/
  /* global numOnly*/
 (function ($) {
     "use strict";
@@ -30,7 +29,7 @@
                 tmp = cache[id];
             }
         }
-        return this.length == 1 ? tmp : this;
+        return this.length === 1 ? tmp : this;
     };
     var boundTouchLayer = false;
 
@@ -44,7 +43,7 @@
 
     function bindTouchLayer() {
         //use a single bind for all scrollers
-        if (af.os.android && !af.os.chrome && af.os.webkit) {
+        if ($.os.android && !$.os.chrome && $.os.webkit) {
             var androidFixOn = false;
             //connect to touchLayer to detect editMode
             $.bind($.touchLayer, ["cancel-enter-edit", "exit-edit"], function () {
@@ -68,7 +67,7 @@
 
             if (!boundTouchLayer && $.touchLayer && $.isObject($.touchLayer)) bindTouchLayer();
             else if (!$.touchLayer || !$.isObject($.touchLayer)) $.touchLayer = {};
-            if (typeof elID == "string" || elID instanceof String) {
+            if (typeof elID === "string" || elID instanceof String) {
                 el = document.getElementById(elID);
             } else {
                 el = elID;
@@ -84,7 +83,7 @@
                 opts.horizontalScroll=true;
             if(checkClassEl.hasClass("y-scroll"))
                 opts.verticalScroll=true;
-            if (af.os.desktop)
+            if ($.os.desktop)
                 return new scrollerCore(el, opts);
             else if (opts.useJsScroll) return new jsScroller(el, opts);
             return new nativeScroller(el, opts);
@@ -202,8 +201,8 @@
                 //assign self destruct
                 var that = this;
                 var orientationChangeProxy = function (e) {
-                    //no need to readjust if disabled...                
-                    if (that.eventsActive&&!$.feat.nativeTouchScroll&&(!af.ui||(af.ui.activeDiv==that.container))) {
+                    //no need to readjust if disabled...
+                    if (that.eventsActive && !$.feat.nativeTouchScroll&&(!$.ui || ($.ui.activeDiv === that.container)) ) {
                         that.adjustScroll();
                     }
                 };
@@ -217,7 +216,7 @@
                 $(window).bind("resize", orientationChangeProxy);
             },
             needsFormsFix: function (focusEl) {
-                return this.useJsScroll && this.isEnabled() && this.el.style.display != "none" && $(focusEl).closest(this.afEl).size() > 0;
+                return this.useJsScroll && this.isEnabled() && this.el.style.display !== "none" && $(focusEl).closest(this.afEl).size() > 0;
             },
             handleEvent: function (e) {
                 if (!this.scrollingLocked) {
@@ -255,16 +254,16 @@
                 if (this.refreshElement === null) {
                     var orginalEl = document.getElementById(this.container.id + "_pulldown");
                     if (orginalEl !== null) {
-                        afEl = af(orginalEl);
+                        afEl = $(orginalEl);
                     } else {
-                        afEl = af("<div id='" + this.container.id + "_pulldown' class='afscroll_refresh' style='position:relative;height:60px;text-align:center;line-height:60px;font-weight:bold;'>" + this.refreshContent + "</div>");
+                        afEl = $("<div id='" + this.container.id + "_pulldown' class='afscroll_refresh' style='position:relative;height:60px;text-align:center;line-height:60px;font-weight:bold;'>" + this.refreshContent + "</div>");
                     }
                 } else {
-                    afEl = af(this.refreshElement);
+                    afEl = $(this.refreshElement);
                 }
                 var el = afEl.get(0);
 
-                this.refreshContainer = af("<div style='overflow:hidden;height:0;width:100%;display:none;background:inherit;'></div>");
+                this.refreshContainer = $("<div style='overflow:hidden;height:0;width:100%;display:none;background:inherit;-webkit-backface-visibility: hidden !important;'></div>");
                 $(this.el).prepend(this.refreshContainer.prepend(el));
                 this.refreshContainer = this.refreshContainer[0];
             },
@@ -282,7 +281,7 @@
                 }
             },
             setRefreshContent: function (content) {
-                af(this.container).find(".afscroll_refresh").html(content);
+                $(this.container).find(".afscroll_refresh").html(content);
             },
             lock: function () {
                 if (this.scrollingLocked) return;
@@ -302,7 +301,7 @@
             scrollToItem: function (el, where) { //TODO: add functionality for x position
                 if (!$.is$(el)) el = $(el);
                 var newTop,itemPos,panelTop,itemTop;
-                if (where == "bottom") {
+                if (where === "bottom") {
                     itemPos = el.offset();
                     newTop = itemPos.top - this.afEl.offset().bottom + itemPos.height;
                     newTop += 4; //add a small space
@@ -368,7 +367,7 @@
             this.container.afScrollerId = el.afScrollerId;
             this.afEl = $(this.container);
 
-            if (this.container.style.overflow != "hidden") this.container.style.overflow = "hidden";
+            if (this.container.style.overflow !== "hidden") this.container.style.overflow = "hidden";
 
             this.addPullToRefresh(null, true);
             if(opts.autoEnable)
@@ -391,7 +390,6 @@
                 scrollDiv = createScrollBar(20, 5);
                 scrollDiv.style.bottom = "0px";
 
-
                 if (this.hScrollCSS) scrollDiv.className = this.hScrollCSS;
                 //scrollDiv.style.opacity = "0";
                 scrollDiv.style.display="none";
@@ -402,7 +400,6 @@
             if (this.horizontalScroll) this.el.style.cssFloat = "left";
 
             this.el.hasScroller = true;
-
         };
         nativeScroller = function (el, opts) {
             if(opts.nativeParent){
@@ -418,7 +415,7 @@
                 $el.insertBefore($el.parent());
                 //$el.parent().parent().append($el);
                 oldParent.remove();
-            }            
+            }
             this.container = this.el;
             $el.css("-webkit-overflow-scrolling", "touch");
 
@@ -430,9 +427,6 @@
         nativeScroller.prototype = new scrollerCore();
         jsScroller.prototype = new scrollerCore();
 
-
-
-
         ///Native scroller
         nativeScroller.prototype.defaultProperties = function () {
 
@@ -442,6 +436,8 @@
             this.cancelPropagation = false;
             this.loggedPcentY = 0;
             this.loggedPcentX = 0;
+            this.xReset=0;
+            this.yReset=0;
             var that = this;
             this.adjustScrollOverflowProxy = function () {
                 that.afEl.css("overflow", "auto");
@@ -493,7 +489,7 @@
             if(!this.refresh)
                 return $(this.el).find(".p2rhack").remove();
             var el=$(this.el).find(".p2rhack");
-            if(el.length===0){
+            if(el.length === 0){
                 $(this.el).append("<div class='p2rhack' style='position:absolute;width:1px;height:1px;opacity:0;background:transparent;z-index:-1;-webkit-transform:translate3d(-1px,0,0);'></div>");
                 el=$(this.el).find(".p2rhack");
             }
@@ -504,24 +500,38 @@
             this.lastScrollInfo= {
                 top:0
             };
+            this.xReset=this.yReset=0;
             if(this.verticalScroll){
-                if(this.el.scrollTop===0)
+                if(this.el.scrollTop===0&&this.refresh){
                     this.el.scrollTop=1;
-                if(this.el.scrollTop===(this.el.scrollHeight - this.el.clientHeight))
+                    this.yReset=-1;
+                }
+                if(this.el.scrollTop===(this.el.scrollHeight - this.el.clientHeight)&&this.infinite){
                     this.el.scrollTop-=1;
+                    this.yReset=1;
+                }
             }
 
             if(this.horizontalScroll){
-                if(this.el.scrollLeft===0)
+                if(this.el.scrollLeft===0){
                     this.el.scrollLeft=1;
-                if(this.el.scrollLeft===(this.el.scrollWidth-this.el.clientWidth))
+                    this.xReset=-1;
+                }
+                if(this.el.scrollLeft===(this.el.scrollWidth-this.el.clientWidth)){
                     this.el.scrollLeft-=1;
+                    this.xReset=1;
+                }
             }
             if (this.refreshCancelCB) clearTimeout(this.refreshCancelCB);
             //get refresh ready
+            if(this.refresh)
+                this.el.addEventListener("touchend",this,false);
+
             this.el.addEventListener("touchmove", this,false);
             this.dY = e.touches[0].pageY;
             this.dX = e.touches[0].pageX;
+            this.startTop=this.el.scrollTop;
+            this.startLeft=this.el.scrollLeft;
             if (this.refresh || this.infinite) {
 
 
@@ -534,18 +544,32 @@
         nativeScroller.prototype.onTouchMove = function (e) {
             var newcY = e.touches[0].pageY - this.dY;
             var newcX = e.touches[0].pageX - this.dX;
-            if(this.verticalScroll&&this.el.clientHeight==this.el.scrollHeight){
+
+            //var scorllTop
+            var atTop=(this.el.scrollHeight-this.el.scrollTop)===this.el.clientHeight&&newcY<0;
+            var atRight=(this.el.scrollWidth-this.el.scrollLeft)===this.el.clientWidth&&newcX<0;
+
+            if(this.verticalScroll){
+                if(this.startTop===0&&this.el.scrollTop===0&&newcY>0)
+                    e.preventDefault();
+            }
+            if(this.horizontalScroll&&this.startTop===0&&this.el.scrollLeft===0&&newcX>0){
+                e.preventDefault();
+            }
+
+            if(this.verticalScroll&&atTop){
                 e.preventDefault();
 
             }
-            if(this.horizontalScroll&&this.el.clientWidth==this.el.scrollWidth){
+            if(this.horizontalScroll&&atRight){
                 e.preventDefault();
             }
 
             if (!this.moved) {
                 $.trigger(this, "scrollstart", [this.el,{x:newcX,y:newcY}]);
                 $.trigger($.touchLayer, "scrollstart", [this.el,{x:newcX,y:newcY}]);
-                this.el.addEventListener("touchend", this, false);
+                if(!this.refresh)
+                    this.el.addEventListener("touchend", this, false);
                 this.moved = true;
             }
 
@@ -598,6 +622,10 @@
             var triggered = this.el.scrollTop <= -(this.refreshHeight);
             var that=this;
             this.fireRefreshRelease(triggered, true);
+            if(!this.moved){
+                this.el.scrollTop+=this.yReset;
+                this.el.scrollLeft+=this.xReset;
+            }
             if (triggered&&this.refresh) {
                 //lock in place
                 //that.refreshContainer.style.position = "";
@@ -633,8 +661,7 @@
             clearInterval(self.nativePolling);
             self.nativePolling = setInterval(function () {
                 counter++;
-
-                if(counter==parseInt(max/8,10)){
+                if(counter === parseInt(max/8,10)) {
                     if(self.initScrollProgress){
                         $.trigger(self,"scroll",[{x:-self.el.scrollLeft+self.cX,y:-self.el.scrollTop+self.cY}]);
                         $.trigger($.touchLayer,"scroll",[{x:-self.el.scrollLeft+self.cX,y:-self.el.scrollTop+self.cY}]);
@@ -649,7 +676,7 @@
 
                     return;
                 }
-                if (self.el.scrollTop != currPos.top || self.el.scrollLeft != currPos.left) {
+                if (self.el.scrollTop !== currPos.top || self.el.scrollLeft !== currPos.left) {
                     clearInterval(self.nativePolling);
                     $.trigger($.touchLayer, "scrollend", [self.el]); //notify touchLayer of this elements scrollend
                     $.trigger(self, "scrollend", [self.el]);
@@ -730,7 +757,6 @@
                 }
             }
 
-
             var that = this;
             if (this.infinite && this.infiniteEndCheck && this.infiniteTriggered) {
 
@@ -739,7 +765,6 @@
             }
         };
         nativeScroller.prototype.logPos = function (x, y) {
-
 
             this.loggedPcentX = this.divide(x, (this.el.scrollWidth));
             this.loggedPcentY = this.divide(y, (this.el.scrollHeight));
@@ -760,11 +785,8 @@
             this.logPos(this.el.scrollLeft, this.el.scrollTop);
         };
 
-
-
         //JS scroller
         jsScroller.prototype.defaultProperties = function () {
-
             this.boolScrollLock = false;
             this.currentScrollingObject = null;
             this.elementInfo = null;
@@ -781,14 +803,13 @@
             this.isScrolling = false;
             this.androidFormsMode = false;
             this.refreshSafeKeep = false;
-
             this.lastScrollbar = "";
             this.finishScrollingObject = null;
             this.container = null;
             this.scrollingFinishCB = null;
             this.loggedPcentY = 0;
             this.loggedPcentX = 0;
-
+            this.androidPerfHack=0.0005;
         };
 
         function createScrollBar(width, height) {
@@ -803,6 +824,7 @@
             scrollDiv.style.background = "black";
             return scrollDiv;
         }
+
         jsScroller.prototype.enable = function (firstExecution) {
             if (this.eventsActive) return;
             this.eventsActive = true;
@@ -881,18 +903,16 @@
                 this.scrollingFinishCB = null;
             }
 
-
             //disable if locked
-            if (event.touches.length != 1 || this.boolScrollLock) return;
+            if (event.touches.length !== 1 || this.boolScrollLock) return;
 
             // Allow interaction to legit calls, like select boxes, etc.
             if (event.touches[0].target && event.touches[0].target.type !== undefined) {
                 var tagname = event.touches[0].target.tagName.toLowerCase();
 
-                if (tagname == "select" ) // stuff we need to allow
+                if (tagname === "select" ) // stuff we need to allow
                 // access to legit calls
                     return;
-
             }
 
             //default variables
@@ -929,7 +949,6 @@
             this.elementInfo.hasHorScroll = this.elementInfo.maxLeft > 0;
             this.elementInfo.requiresVScrollBar = this.vscrollBar && this.elementInfo.hasVertScroll;
             this.elementInfo.requiresHScrollBar = this.hscrollBar && this.elementInfo.hasHorScroll;
-
 
             //save event
             this.saveEventInfo(event);
@@ -983,7 +1002,7 @@
             this.lastScrollInfo = scrollInfo;
             this.hasMoved = false;
 
-            if(this.elementInfo.maxTop===0&&this.elementInfo.maxLeft===0&&this.lockBounce)
+            if(this.elementInfo.maxTop === 0 && this.elementInfo.maxLeft === 0 && this.lockBounce)
                 this.scrollTop(0);
             else
                 this.scrollerMoveCSS(this.lastScrollInfo, 0);
@@ -1024,17 +1043,17 @@
             };
         };
         jsScroller.prototype.setVScrollBar = function (scrollInfo, time, timingFunction) {
-
             if (!this.elementInfo.requiresVScrollBar) return false;
             var newHeight = (parseFloat(this.elementInfo.bottomMargin / this.elementInfo.divHeight) * this.elementInfo.bottomMargin) + "px";
-            if(numOnly(newHeight)>this.elementInfo.bottomMargin)
-                newHeight=this.elementInfo.bottomMargin+"px";
-            if (newHeight != this.vscrollBar.style.height) this.vscrollBar.style.height = newHeight;
+            if(numOnly(newHeight) > this.elementInfo.bottomMargin)
+                newHeight = this.elementInfo.bottomMargin+"px";
+            if (newHeight !== this.vscrollBar.style.height)
+				this.vscrollBar.style.height = newHeight;
 
             var pos = (this.elementInfo.bottomMargin - numOnly(this.vscrollBar.style.height)) - (((this.elementInfo.maxTop + scrollInfo.y) / this.elementInfo.maxTop) * (this.elementInfo.bottomMargin - numOnly(this.vscrollBar.style.height)));
             if (pos > this.elementInfo.bottomMargin) pos = this.elementInfo.bottomMargin;
-
             if (pos < 0) pos = 0;
+
             this.scrollbarMoveCSS(this.vscrollBar, {
                 x: 0,
                 y: pos
@@ -1044,9 +1063,10 @@
         jsScroller.prototype.setHScrollBar = function (scrollInfo, time, timingFunction) {
             if (!this.elementInfo.requiresHScrollBar) return false;
             var newWidth = (parseFloat(this.elementInfo.rightMargin / this.elementInfo.divWidth) * this.elementInfo.rightMargin) + "px";
-            if (newWidth != this.hscrollBar.style.width) this.hscrollBar.style.width = newWidth;
-            var pos = (this.elementInfo.rightMargin - numOnly(this.hscrollBar.style.width)) - (((this.elementInfo.maxLeft + scrollInfo.x) / this.elementInfo.maxLeft) * (this.elementInfo.rightMargin - numOnly(this.hscrollBar.style.width)));
+            if (newWidth !== this.hscrollBar.style.width)
+				this.hscrollBar.style.width = newWidth;
 
+            var pos = (this.elementInfo.rightMargin - numOnly(this.hscrollBar.style.width)) - (((this.elementInfo.maxLeft + scrollInfo.x) / this.elementInfo.maxLeft) * (this.elementInfo.rightMargin - numOnly(this.hscrollBar.style.width)));
             if (pos > this.elementInfo.rightMargin) pos = this.elementInfo.rightMargin;
             if (pos < 0) pos = 0;
 
@@ -1058,7 +1078,6 @@
         };
 
         jsScroller.prototype.onTouchMove = function (event) {
-
 
             if (this.currentScrollingObject === null) return;
             //event.preventDefault();
@@ -1106,7 +1125,6 @@
 
 
             //pull to refresh elastic
-
             var positiveOverflow = this.lastScrollInfo.y > 0 && this.lastScrollInfo.deltaY > 0;
             var negativeOverflow = this.lastScrollInfo.y < -this.elementInfo.maxTop && this.lastScrollInfo.deltaY < 0;
             var overflow,pcent,baseTop;
@@ -1195,8 +1213,6 @@
 
         };
 
-
-
         jsScroller.prototype.calculateMovement = function (event, last) {
             //default variables
             var scrollInfo = {
@@ -1234,6 +1250,10 @@
         jsScroller.prototype.calculateTarget = function (scrollInfo) {
             scrollInfo.y = this.lastScrollInfo.y + scrollInfo.deltaY;
             scrollInfo.x = this.lastScrollInfo.x + scrollInfo.deltaX;
+            if(Math.abs(scrollInfo.deltaY)>0)
+                scrollInfo.y+=(scrollInfo.deltaY>0?1:-1)*(this.elementInfo.divHeight*this.androidPerfHack);
+            if(Math.abs(scrollInfo.deltaX)>0)
+                scrollInfo.x+=(scrollInfo.deltaX>0?1:-1)*(this.elementInfo.divWidth*this.androidPerfHack);
         };
         jsScroller.prototype.checkYboundary = function (scrollInfo) {
             var minTop = this.container.clientHeight / 2;
@@ -1295,7 +1315,7 @@
         };
 
         jsScroller.prototype.setMomentum = function (scrollInfo) {
-            var deceleration = 0.0012;
+            var deceleration = 0.0008;
 
             //calculate movement speed
             scrollInfo.speedY = this.divide(scrollInfo.deltaY, scrollInfo.duration);
@@ -1307,17 +1327,16 @@
             scrollInfo.absDeltaY = Math.abs(scrollInfo.deltaY);
             scrollInfo.absDeltaX = Math.abs(scrollInfo.deltaX);
 
-
             //set momentum
             if (scrollInfo.absDeltaY > 0) {
-                scrollInfo.deltaY = (scrollInfo.deltaY < 0 ? -1 : 1) * (scrollInfo.absSpeedY * scrollInfo.absSpeedY) / (2 * deceleration);
+                scrollInfo.deltaY += (scrollInfo.deltaY < 0 ? -1 : 1) * (scrollInfo.absSpeedY * scrollInfo.absSpeedY) / (2 * deceleration);
                 scrollInfo.absDeltaY = Math.abs(scrollInfo.deltaY);
                 scrollInfo.duration = scrollInfo.absSpeedY / deceleration;
                 scrollInfo.speedY = scrollInfo.deltaY / scrollInfo.duration;
                 scrollInfo.absSpeedY = Math.abs(scrollInfo.speedY);
                 if (scrollInfo.absSpeedY < deceleration * 100 || scrollInfo.absDeltaY < 5) scrollInfo.deltaY = scrollInfo.absDeltaY = scrollInfo.duration = scrollInfo.speedY = scrollInfo.absSpeedY = 0;
             } else if (scrollInfo.absDeltaX) {
-                scrollInfo.deltaX = (scrollInfo.deltaX < 0 ? -1 : 1) * (scrollInfo.absSpeedX * scrollInfo.absSpeedX) / (2 * deceleration);
+                scrollInfo.deltaX += (scrollInfo.deltaX < 0 ? -1 : 1) * (scrollInfo.absSpeedX * scrollInfo.absSpeedX) / (2 * deceleration);
                 scrollInfo.absDeltaX = Math.abs(scrollInfo.deltaX);
                 scrollInfo.duration = scrollInfo.absSpeedX / deceleration;
                 scrollInfo.speedX = scrollInfo.deltaX / scrollInfo.duration;
@@ -1326,9 +1345,7 @@
             } else scrollInfo.duration = 0;
         };
 
-
         jsScroller.prototype.onTouchEnd = function (event) {
-
 
             if (this.currentScrollingObject === null || !this.moved) return;
 
@@ -1342,6 +1359,8 @@
                 this.setMomentum(scrollInfo);
             }
             this.calculateTarget(scrollInfo);
+
+            
 
             //get the current top
             var cssMatrix = this.getCSSMatrix(this.el);
@@ -1382,9 +1401,8 @@
                     if(-scrollInfo.left>this.elementInfo.maxLeft&&this.refresh) scrollInfo.duration=HIDE_REFRESH_TIME;
                 }
             }
-            if(scrollInfo.x==scrollInfo.left&&scrollInfo.y==scrollInfo.top)
-                scrollInfo.duration=0;
-            if (this.androidFormsMode) scrollInfo.duration = 0;
+            if ((scrollInfo.x === scrollInfo.left && scrollInfo.y === scrollInfo.top) || this.androidFormsMode)
+                scrollInfo.duration = 0;
 
             this.scrollerMoveCSS(scrollInfo, scrollInfo.duration, "cubic-bezier(0.33,0.66,0.66,1)");
             this.setVScrollBar(scrollInfo, scrollInfo.duration, "cubic-bezier(0.33,0.66,0.66,1)");
@@ -1392,7 +1410,7 @@
             this.setFinishCalback(scrollInfo.duration);
             if (this.infinite && !this.infiniteTriggered) {
                 if ((Math.abs(scrollInfo.y) >= (this.el.clientHeight - this.container.clientHeight))) {
-                    var self=this;
+                    var self = this;
                     setTimeout(function(){
                         self.infiniteTriggered = true;
                         $.trigger(self, "infinite-scroll");
@@ -1450,7 +1468,6 @@
                 this.hscrollBar.style[$.feat.cssPrefix + "Perspective"] = "none";
                 this.hscrollBar.style[$.feat.cssPrefix + "BackfaceVisibility"] = "visible";
             }
-
         };
         jsScroller.prototype.stopFormsMode = function () {
             if (this.blockFormsFix) return;
@@ -1481,10 +1498,7 @@
                 this.hscrollBar.style[$.feat.cssPrefix + "Perspective"] = 1000;
                 this.hscrollBar.style[$.feat.cssPrefix + "BackfaceVisibility"] = "hidden";
             }
-
         };
-
-
 
         jsScroller.prototype.scrollerMoveCSS = function (distanceToMove, time, timingFunction) {
             if (!time) time = 0;

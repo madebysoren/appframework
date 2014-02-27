@@ -13,7 +13,7 @@
         doMenu = true,
         showHide = false;
     $.ui.slideSideMenu = true;
-    $.ui.fixedSideMenuWidth = 20000;
+    $.ui.fixedSideMenuWidth = 20000; //By default, we want it to always be revealed
     var isAside=false;
     var keepOpen=false;
 
@@ -35,6 +35,8 @@
             openState=0;
             if (!$.ui.isSideMenuEnabled() && !$.ui.isAsideMenuEnabled()) return true;
             if(e.touches.length>1) return;
+            menuWidth = $menu.width();
+            asideWidth = $asideMenu.width();
             startX = e.touches[0].pageX;
             startY = e.touches[0].pageY;
 
@@ -48,7 +50,7 @@
             }
             else
                 doMenu = true;
-            
+
             var sidePos=$.ui.getSideMenuPosition();
             if(sidePos>0){
                 openState=1;
@@ -96,7 +98,6 @@
                     $asideMenu.hide();
                 }
             }
-            
             if (Math.abs(thePlace) > max) return true;
 
             slideOver=max/3;

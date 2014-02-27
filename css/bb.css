@@ -3,7 +3,7 @@
     font-size: 12pt;
 }
 
-#afui.bb #header {
+#afui.bb .header {
     background:#00609E;
     background:-ms-linear-gradient(65deg, #00609E 0%,#00AFEE 100%);
     background:-webkit-gradient(linear, left bottom, right top, color-stop(0%,#00609E), color-stop(100%,#00AFEE));
@@ -14,7 +14,7 @@
     border-color:#009CE1 transparent #004E92 transparent;
 }
 
-#afui.bb #header h1 {
+#afui.bb .header h1 {
     text-shadow:rgba(0,0,0,0.8) 0 1px 0;
     font-weight:normal;
 }
@@ -98,14 +98,14 @@
     transform: rotate(10deg);
 }
 
-#afui.bb #header .button {
+#afui.bb .header .button {
     color:#fff;
     background:none;
     text-shadow:0 -1px 0 #333;
     border-color:transparent;
 }
 
-#afui.bb #navbar {
+#afui.bb .footer {
     border:none;
     border-radius:0px;
     background:none;
@@ -114,14 +114,14 @@
     box-shadow: none;
 }
 
-#afui.bb #navbar>footer>a:not(.button) {
+#afui.bb .footer>footer>a:not(.button) {
     height:49px;
     top:0px;
     border-top:4px solid #000;
     background:#1e1e1e;
 }
 
-#afui.bb #navbar>footer>a.pressed:not(.button) {
+#afui.bb .footer>footer>a.pressed:not(.button) {
     border:0px;
     border-top:4px solid #0aa9dc;
     border-radius:0px;
@@ -129,11 +129,11 @@
     color:white;
 }
 
-#afui.bb #navbar>footer>a:not(:last-of-type):not(.pressed):not(.button){
+#afui.bb .footer>footer>a:not(:last-of-type):not(.pressed):not(.button){
     border-right:1px solid black;
 }
 
-#afui.bb #navbar>footer>a.icon.pressed:not(.button):before {
+#afui.bb .footer>footer>a.icon.pressed:not(.button):before {
     color: white;
 }
 
@@ -172,11 +172,11 @@
 #afui.bb .button-grouped > .button:first-child,
 #afui.bb .button-grouped.vertical *,
 #afui.bb .button-grouped.vertical >  .button:last-child, 
-#afui.bb > #header .button-grouped > .button {
+#afui.bb > .header .button-grouped > .button {
     border-color:#ccc;
 }
 
-#afui.bb > #header .button-grouped > .button.pressed {
+#afui.bb > .header .button-grouped > .button.pressed {
     background:#07a;
 }
 

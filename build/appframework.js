@@ -1,4 +1,4 @@
-/*! intel-appframework - v2.1.0 - 2014-01-22 */
+/*! intel-appframework - v2.1.0 - 2014-02-19 */
 
 /**
  * App Framwork  query selector class for HTML5 mobile apps on a WebkitBrowser.
@@ -7,10 +7,13 @@
 
 
  * MIT License
- * @author AppMobi
+ * @author Intel
  * @copyright Intel
  * @api private
  */
+ /* jshint eqeqeq:false */
+  /* global af: true */
+ 
 if (!window.af || typeof(af) !== "function") {
 
     /**
@@ -51,7 +54,7 @@ if (!window.af || typeof(af) !== "function") {
             isWin8 = (typeof(MSApp) === "object");
 
         /**
-         * internal function used for $().css - checks to see if it's a number and the css property
+         * internal function used for $().css - checks to see if it is a number and the css property
          * needs "px" added to it
          * @api private
          */
@@ -98,14 +101,13 @@ if (!window.af || typeof(af) !== "function") {
 
         /**
          * Internal function that returns a array of unique elements
-         * @param {Array} array to compare against
+         * @param {Array} arr array to compare against
          * @return {Array} array of unique elements
          * @api private
          */
-
         function unique(arr) {
             for (var i = 0; i < arr.length; i++) {
-                if (arr.indexOf(arr[i]) != i) {
+                if (arr.indexOf(arr[i]) !== i) {
                     arr.splice(i, 1);
                     i--;
                 }
@@ -128,7 +130,7 @@ if (!window.af || typeof(af) !== "function") {
                 return elems;
 
             for (; nodes; nodes = nodes.nextSibling) {
-                if (nodes.nodeType == 1 && nodes !== element) {
+                if (nodes.nodeType === 1 && nodes !== element) {
                     elems.push(nodes);
                 }
             }
@@ -140,6 +142,7 @@ if (!window.af || typeof(af) !== "function") {
          * This is also the start of our query selector engine
          * @param {String|Element|Object|Array} selector
          * @param {String|Element|Object} [context]
+         * @api private
          */
         var $afm = function(toSelect, what) {
             this.length = 0;
@@ -183,6 +186,8 @@ if (!window.af || typeof(af) !== "function") {
          * This calls the $afm function
          * @param {String|Element|Object|Array} selector
          * @param {String|Element|Object} [context]
+         * @title $()
+         * @return {Object} an appframework object
          */
         var $ = function(selector, what) {
             return new $afm(selector, what);
@@ -213,8 +218,8 @@ if (!window.af || typeof(af) !== "function") {
 
             selector = selector.trim();
 
-            if (selector[0] === "#" && selector.indexOf(".") == -1 &&selector.indexOf(",") == -1 && selector.indexOf(" ") === -1 && selector.indexOf(">") === -1) {
-                if (what == document)
+            if (selector[0] === "#" && selector.indexOf(".") === -1 &&selector.indexOf(",") === -1 && selector.indexOf(" ") === -1 && selector.indexOf(">") === -1) {
+                if (what === document)
                     _shimNodes(what.getElementById(selector.replace("#", "")), this);
                 else
                     _shimNodes(_selectorAll(selector, what), this);
@@ -282,7 +287,7 @@ if (!window.af || typeof(af) !== "function") {
                 }
             } else if ($.isObject(elements)){
                 for (key in elements) {
-                    if (!elements.hasOwnProperty(key) || key == "length")
+                    if (!elements.hasOwnProperty(key) || key === "length")
                         continue;
                     value = callback(elements[key],[elements[key],key]);
                     if (value !== nundefined)
@@ -312,7 +317,7 @@ if (!window.af || typeof(af) !== "function") {
                 }
             } else if ($.isObject(elements)){
                 for (key in elements) {
-                    if (!elements.hasOwnProperty(key) || key == "length")
+                    if (!elements.hasOwnProperty(key) || key === "length")
                         continue;
                     if (callback(key, elements[key]) === false)
                         return elements;
@@ -570,9 +575,9 @@ if (!window.af || typeof(af) !== "function") {
                 $().css("background","red")  //Sets the elements background to red
                 ```
 
-            * @param {String} attribute to get
-            * @param {String} value to set as
-            * @return {Object} an appframework object
+            * @param {String} attribute The attribute to get
+            * @param {String} value Value to set as
+            * @return {Object} obj An appframework object
             * @title $().css(attribute,[value])
             */
             css: function(attribute, value, obj) {
@@ -612,10 +617,9 @@ if (!window.af || typeof(af) !== "function") {
             },
             /**
              * Performs a css vendor specific transform:translate operation on the collection.
-             *
-             ```
+                ```
                 $("#main").cssTranslate("200px,0,0");
-             ```
+                ```
              * @param {String} Transform values
              * @return {Object} an appframework object
              * @title $().cssTranslate(value)
@@ -625,10 +629,9 @@ if (!window.af || typeof(af) !== "function") {
             },
             /**
              * Gets the computed style of CSS values
-             *
-            ```
+                ```
                $("#main").computedStyle("display");
-            ```
+                ```
              * @param {String} css property
              * @return {Int|String|Float|} css vlaue
              * @title $().computedStyle()
@@ -667,7 +670,7 @@ if (!window.af || typeof(af) !== "function") {
                 if (this.length === 0)
                     return this;
                 for (var i = 0; i < this.length; i++) {
-                    if (this.css("display", null, this[i]) != "none") {
+                    if (this.css("display", null, this[i]) !== "none") {
                         this[i].setAttribute("afmOldStyle", this.css("display", null, this[i]));
                         this[i].style.display = "none";
                     }
@@ -688,7 +691,7 @@ if (!window.af || typeof(af) !== "function") {
                 if (this.length === 0)
                     return this;
                 for (var i = 0; i < this.length; i++) {
-                    if (this.css("display", null, this[i]) == "none") {
+                    if (this.css("display", null, this[i]) === "none") {
                         this[i].style.display = this[i].getAttribute("afmOldStyle") ? this[i].getAttribute("afmOldStyle") : "block";
                         this[i].removeAttribute("afmOldStyle");
                     }
@@ -711,10 +714,10 @@ if (!window.af || typeof(af) !== "function") {
                     return this;
                 var show2 = show===true;
                 for (var i = 0; i < this.length; i++) {
-                    if (this.css("display", null, this[i]) != "none" && (show == nundefined || show2 === false)) {
+                    if (this.css("display", null, this[i]) !== "none" && (show == nundefined || show2 === false)) {
                         this[i].setAttribute("afmOldStyle", this.css("display", null, this[i]));
                         this[i].style.display = "none";
-                    } else if (this.css("display", null, this[i]) == "none" && (show == nundefined || show2 === true)) {
+                    } else if (this.css("display", null, this[i]) === "none" && (show == nundefined || show2 === true)) {
                         this[i].style.display = this[i].getAttribute("afmOldStyle") ? this[i].getAttribute("afmOldStyle") : "block";
                         this[i].removeAttribute("afmOldStyle");
                     }
@@ -752,7 +755,7 @@ if (!window.af || typeof(af) !== "function") {
                 $().attr("foo",{bar:"bar"}) //Adds the object to an internal cache
                 ```
 
-            * @param {String|Object} attribute to act upon.  If it's an object (hashmap), it will set the attributes based off the kvp.
+            * @param {String|Object} attribute to act upon.  If it is an object (hashmap), it will set the attributes based off the kvp.
             * @param {String|Array|Object|function} [value] to set
             * @return {String|Object|Array|Function} If used as a getter, return the attribute value.  If a setter, return an appframework object
             * @title $().attr(attribute,[value])
@@ -819,7 +822,7 @@ if (!window.af || typeof(af) !== "function") {
                 $().prop("foo",{bar:"bar"}) //Adds the object to an internal cache
                 ```
 
-            * @param {String|Object} property to act upon.  If it's an object (hashmap), it will set the attributes based off the kvp.
+            * @param {String|Object} property to act upon.  If it is an object (hashmap), it will set the attributes based off the kvp.
             * @param {String|Array|Object|function} [value] to set
             * @return {String|Object|Array|Function} If used as a getter, return the property value.  If a setter, return an appframework object
             * @title $().prop(property,[value])
@@ -881,14 +884,12 @@ if (!window.af || typeof(af) !== "function") {
             /**
             * Removes elements based off a selector
                 ```
-                $().remove();  //Remove all
-                $().remove(".foo");//Remove off a string selector
-                var element=$("#foo").get(0);
-                $().remove(element); //Remove by an element
-                $().remove($(".foo"));  //Remove by a collection
-
+                    $().remove();  //Remove all
+                    $().remove(".foo");//Remove off a string selector
+                    var element=$("#foo").get(0);
+                    $().remove(element); //Remove by an element
+                    $().remove($(".foo"));  //Remove by a collection
                 ```
-
             * @param {String|Object|Array} selector to filter against
             * @return {Object} appframework object
             * @title $().remove(selector)
@@ -955,7 +956,7 @@ if (!window.af || typeof(af) !== "function") {
                     }
                     var classList = this[i].className;
                     //SGV LINK EVENT
-                    if (typeof this[i].className == "object") {
+                    if (typeof this[i].className === "object") {
                         classList = " ";
                     }
                     name.split(/\s+/g).forEach(removeClassLoop);
@@ -980,7 +981,7 @@ if (!window.af || typeof(af) !== "function") {
             toggleClass: function(name, state) {
                 if (name == nundefined) return this;
                 for (var i = 0; i < this.length; i++) {
-                    if (typeof state != "boolean") {
+                    if (typeof state !== "boolean") {
                         state = this.hasClass(name, this[i]);
                     }
                     $(this[i])[state ? "removeClass" : "addClass"](name);
@@ -1040,8 +1041,8 @@ if (!window.af || typeof(af) !== "function") {
             /**
             * Appends to the elements
             * We boil everything down to an appframework object and then loop through that.
-            * If it's HTML, we create a dom element so we do not break event bindings.
-            * if it's a script tag, we evaluate it.
+            * If it is HTML, we create a dom element so we do not break event bindings.
+            * if it is a script tag, we evaluate it.
                 ```
                 $().append("<div></div>"); //Creates the object from the string and appends it
                 $().append($("#foo")); //Append an object;
@@ -1062,7 +1063,7 @@ if (!window.af || typeof(af) !== "function") {
                 if(content)
                     $(this).add(content);
                 for (i = 0; i < this.length; i++) {
-                    if (element.length && typeof element != "string") {
+                    if (element.length && typeof element !== "string") {
                         element = $(element);
                         _insertFragments(element, this[i], insert);
                     } else {
@@ -1073,7 +1074,7 @@ if (!window.af || typeof(af) !== "function") {
                         if (obj instanceof $afm) {
                             for (var k=0,lenk=obj.length; k<lenk; k++) {
                                 node = obj[k];
-                                if (node.nodeName != nundefined && node.nodeName.toLowerCase() == "script" && (!node.type || node.type.toLowerCase() === "text/javascript")) {
+                                if (node.nodeName != nundefined && node.nodeName.toLowerCase() === "script" && (!node.type || node.type.toLowerCase() === "text/javascript")) {
                                     window["eval"](node.innerHTML);
                                 } else {
                                     _insertFragments($(node), this[i], insert);
@@ -1198,7 +1199,7 @@ if (!window.af || typeof(af) !== "function") {
                 var obj;
                 if (this.length === 0)
                     return this;
-                if (this[0] == window)
+                if (this[0] === window)
                     return {
                         left: 0,
                         top: 0,
@@ -1231,9 +1232,9 @@ if (!window.af || typeof(af) !== "function") {
                     return this;
                 if (val != nundefined)
                     return this.css("height", val);
-                if (this[0] == this[0].window)
+                if (this[0] === this[0].window)
                     return window.innerHeight + "";
-                if (this[0].nodeType == this[0].DOCUMENT_NODE)
+                if (this[0].nodeType === this[0].DOCUMENT_NODE)
                     return this[0].documentElement.offsetheight;
                 else {
                     var tmpVal = this.css("height").replace("px", "");
@@ -1256,9 +1257,9 @@ if (!window.af || typeof(af) !== "function") {
                     return this;
                 if (val != nundefined)
                     return this.css("width", val);
-                if (this[0] == this[0].window)
+                if (this[0] === this[0].window)
                     return window.innerWidth;
-                if (this[0].nodeType == this[0].DOCUMENT_NODE)
+                if (this[0].nodeType === this[0].DOCUMENT_NODE)
                     return this[0].documentElement.offsetwidth;
                 else {
                     var tmpVal = this.css("width").replace("px", "");
@@ -1286,7 +1287,7 @@ if (!window.af || typeof(af) !== "function") {
                 var elems = [];
                 for (var i = 0; i < this.length; i++) {
                     var tmp = this[i];
-                    while (tmp.parentNode && tmp.parentNode != document) {
+                    while (tmp.parentNode && tmp.parentNode !== document) {
                         elems.push(tmp.parentNode);
                         if (tmp.parentNode)
                             tmp = tmp.parentNode;
@@ -1401,7 +1402,7 @@ if (!window.af || typeof(af) !== "function") {
                 var start = $(selector, context);
                 if (start.length === 0)
                     return $();
-                while (cur && start.indexOf(cur) == -1) {
+                while (cur && start.indexOf(cur) === -1) {
                     cur = cur !== context && cur !== document && cur.parentNode;
                 }
                 return $(cur);
@@ -1451,7 +1452,7 @@ if (!window.af || typeof(af) !== "function") {
                 var elems = [];
                 for (var i = 0; i < this.length; i++) {
                     var val = this[i];
-                    if (val.parentNode && $(selector, val.parentNode).indexOf(val) == -1)
+                    if (val.parentNode && $(selector, val.parentNode).indexOf(val) === -1)
                         elems.push(val);
                 }
                 return this.setupOld($(unique(elems)));
@@ -1533,10 +1534,10 @@ if (!window.af || typeof(af) !== "function") {
                     return "";
                 var serializeFn=function(elem) {
                     var type = elem.getAttribute("type");
-                    if (elem.nodeName.toLowerCase() != "fieldset" && !elem.disabled && type != "submit" && type != "reset" && type != "button" && ((type != "radio" && type != "checkbox") || elem.checked)) {
+                    if (elem.nodeName.toLowerCase() !== "fieldset" && !elem.disabled && type !== "submit" && type !== "reset" && type !== "button" && ((type !== "radio" && type !== "checkbox") || elem.checked)) {
 
                         if (elem.getAttribute("name")) {
-                            if (elem.type == "select-multiple") {
+                            if (elem.type === "select-multiple") {
                                 for (var j = 0; j < elem.options.length; j++) {
                                     if (elem.options[j].selected)
                                         params.push(elem.getAttribute("name") + "=" + encodeURIComponent(elem.options[j].value));
@@ -1559,7 +1560,7 @@ if (!window.af || typeof(af) !== "function") {
                 ```
                $().eq(index)
                ```
-             * @param {Int} index - Index to filter by. If negative, it will go back from the end
+             * @param {Int} ind Index to filter by. If negative, it will go back from the end
              * @return {Object} appframework object
              * @title $().eq(index)
              */
@@ -1571,7 +1572,7 @@ if (!window.af || typeof(af) !== "function") {
                ```
                $().index(elem)
                ```
-             * @param {String|Object} element to look for.  Can be a selector or object
+             * @param {String|Object} elem The element to look for. Can be a selector or object
              * @return integer - index of selected element
              * @title $().index(elem)
              */
@@ -1697,15 +1698,15 @@ if (!window.af || typeof(af) !== "function") {
         * options.data - data to pass into request.  $.param is called on objects
             ```
             var opts={
-            type:"GET",
-            success:function(data){},
-            url:"mypage.php",
-            data:{bar:"bar"},
+                type:"GET",
+                success:function(data){},
+                url:"mypage.php",
+                data:{bar:"bar"},
             }
             $.ajax(opts);
             ```
 
-        * @param {Object} options
+        * @param {Object} opts Options
         * @title $.ajax(options)
         */
         $.ajax = function(opts) {
@@ -1714,7 +1715,7 @@ if (!window.af || typeof(af) !== "function") {
 
                 var settings = opts || {};
                 for (var key in $.ajaxSettings) {
-                    if (typeof(settings[key]) == "undefined")
+                    if (typeof(settings[key]) === "undefined")
                         settings[key] = $.ajaxSettings[key];
                 }
 
@@ -1768,7 +1769,7 @@ if (!window.af || typeof(af) !== "function") {
                     return $.jsonP(settings);
                 }
                 if (settings.crossDomain === null) settings.crossDomain = /^([\w-]+:)?\/\/([^\/]+)/.test(settings.url) &&
-                        RegExp.$2 != window.location.host;
+                        RegExp.$2 !== window.location.host;
 
                 if (!settings.crossDomain)
                     settings.headers = $.extend({
@@ -1787,7 +1788,7 @@ if (!window.af || typeof(af) !== "function") {
                     if (xhr.readyState === 4) {
                         clearTimeout(abortTimeout);
                         var result, error = false;
-                        if ((xhr.status >= 200 && xhr.status < 300) || xhr.status === 0 && protocol == "file:") {
+                        if ((xhr.status >= 200 && xhr.status < 300) || xhr.status === 0 && protocol === "file:") {
                             if (mime === "application/json" && !(/^\s*$/.test(xhr.responseText))) {
                                 try {
                                     result = JSON.parse(xhr.responseText);
@@ -1796,7 +1797,7 @@ if (!window.af || typeof(af) !== "function") {
                                 }
                             } else if (mime === "application/xml, text/xml") {
                                 result = xhr.responseXML;
-                            } else if (mime == "text/html") {
+                            } else if (mime === "text/html") {
                                 result = xhr.responseText;
                                 $.parseJS(result);
                             } else
@@ -2029,6 +2030,11 @@ if (!window.af || typeof(af) !== "function") {
             $.feat.cssTransformEnd = !$.os.opera ? ",0)" : ")";
             if ($.os.android && !$.os.webkit)
                 $.os.android = false;
+            var items=["Webkit","Moz","ms","O"];
+            for(var j=0;j<items.length;j++){
+                if(document.documentElement.style[items[j]+"Transform"]==="")
+                    $.feat.cssPrefix=items[j];
+            }
 
         }
 
@@ -2200,7 +2206,7 @@ if (!window.af || typeof(af) !== "function") {
             if (event.ns)
                 var matcher = matcherFor(event.ns);
             return (handlers[afmid(element)] || []).filter(function(handler) {
-                return handler && (!event.e || handler.e == event.e) && (!event.ns || matcher.test(handler.ns)) && (!fn || handler.fn == fn || (typeof handler.fn === "function" && typeof fn === "function" && handler.fn === fn)) && (!selector || handler.sel == selector);
+                return handler && (!event.e || handler.e === event.e) && (!event.ns || matcher.test(handler.ns)) && (!fn || handler.fn === fn || (typeof handler.fn === "function" && typeof fn === "function" && handler.fn === fn)) && (!selector || handler.sel === selector);
             });
         }
         /**
@@ -2399,7 +2405,7 @@ if (!window.af || typeof(af) !== "function") {
             $.each(eventMethods, function(name, predicate) {
                 proxy[name] = function() {
                     this[predicate] = returnTrue;
-                    if (name == "stopImmediatePropagation" || name == "stopPropagation") {
+                    if (name === "stopImmediatePropagation" || name === "stopPropagation") {
                         event.cancelBubble = true;
                         if (!event[name])
                             return;
@@ -2523,7 +2529,7 @@ if (!window.af || typeof(af) !== "function") {
         * @title $().trigger(event,data);
         */
         $.fn.trigger = function(event, data, props) {
-            if (typeof event == "string")
+            if (typeof event === "string")
                 event = $.Event(event, props);
             event.data = data;
             for (var i = 0, len = this.length; i < len; i++) {
@@ -2533,10 +2539,14 @@ if (!window.af || typeof(af) !== "function") {
         };
 
         /**
-         * Creates a custom event to be used internally.
+         Creates a custom event to be used internally.
+         ```
+         $.Event('MouseEvent');
+         ```
          * @param {String} type
          * @param {Object} [properties]
          * @return {event} a custom event that can then be dispatched
+         * @api private
          * @title $.Event(type,props);
          */
 
@@ -2545,13 +2555,17 @@ if (!window.af || typeof(af) !== "function") {
                 bubbles = true;
             if (props)
                 for (var name in props)
-                    (name == "bubbles") ? (bubbles = !! props[name]) : (event[name] = props[name]);
+                    (name === "bubbles") ? (bubbles = !! props[name]) : (event[name] = props[name]);
             event.initEvent(type, bubbles, true, null, null, null, null, null, null, null, null, null, null, null, null);
             return event;
         };
 
-        /* The following are for events on objects */
         /**
+         * The following are for objects and not DOM nodes
+         * @api private
+         */
+        
+        /*
          * Bind an event to an object instead of a DOM Node
            ```
            $.bind(this,"event",function(){});
@@ -2616,7 +2630,7 @@ if (!window.af || typeof(af) !== "function") {
                     for (var j = 0; j < evts.length; j++) {
                         if (f == nundefined)
                             delete evts[j];
-                        if (evts[j] == f) {
+                        if (evts[j] === f) {
                             evts.splice(j, 1);
                             break;
                         }
@@ -2624,27 +2638,19 @@ if (!window.af || typeof(af) !== "function") {
                 }
             }
         };
-
-
         /**
-         * Creates a proxy function so you can change the "this" context in the function
-         * Update: now also allows multiple argument call or for you to pass your own arguments
-           ```
-            var newObj={foo:bar}
-            $("#main").bind("click",$.proxy(function(evt){console.log(this)},newObj);
-
-            or
-
-            ( $.proxy(function(foo, bar){console.log(this+foo+bar)}, newObj) )("foo", "bar");
-
-            or
-
-            ( $.proxy(function(foo, bar){console.log(this+foo+bar)}, newObj, ["foo", "bar"]) )();
-           ```
-         * @param {Function} Callback
-         * @param {Object} Context
+         * Creates a proxy function so you can chane "this" context in the function
+            ```
+                var newObj={foo:bar}
+                $("#main").bind("click",$.proxy(function(evt){console.log(this)},newObj);
+                ( $.proxy(function(foo, bar){console.log(this+foo+bar)}, newObj) )("foo", "bar");
+                ( $.proxy(function(foo, bar){console.log(this+foo+bar)}, newObj, ["foo", "bar"]) )();
+            ```
+         * @param {Function} callback
+         * @param {Object} Context         
          * @title $.proxy(callback,context);
          */
+
         $.proxy = function(f, c, args) {
             return function() {
                 if (args) return f.apply(c, args); //use provided arguments
@@ -2742,7 +2748,7 @@ if (!window.af || typeof(af) !== "function") {
             window.postMessage("afm-asap", "*");
         };
         window.addEventListener("message", function(event) {
-            if (event.source == window && event.data == "afm-asap") {
+            if (event.source === window && event.data === "afm-asap") {
                 event.stopPropagation();
                 if (timeouts.length > 0) { //just in case...
                     (timeouts.shift()).apply(contexts.shift(), params.shift());
@@ -2762,7 +2768,7 @@ if (!window.af || typeof(af) !== "function") {
         $.parseJS = function(div) {
             if (!div)
                 return;
-            if (typeof(div) == "string") {
+            if (typeof(div) === "string") {
                 var elem = document.createElement("div");
                 if (isWin8) {
                     MSApp.execUnsafeLocalFunction(function() {

@@ -24,7 +24,7 @@
 
 	margin-left:16px;
 	padding-left:6px;
-	border-color:#666 #666 #666 transparent !important;
+	border-color:#666 #666 transparent transparent !important;
 }
 #afui .button.next {
 	border-color:#666 transparent #666 #666 !important;
@@ -66,7 +66,7 @@
 	box-shadow:none;
 }
 
-#afui #header .button-grouped>.button {
+#afui .header .button-grouped>.button {
 	margin:0;
     border-color:#fff;
 }
@@ -189,7 +189,7 @@
 	border-color:#666;
 }
 
-#afui #header .button {
+#afui .header .button {
     color: #fff;
     background:none;
     border-color: transparent;
@@ -201,7 +201,7 @@
     white-space: nowrap;
 }
  
-#header .button.icon:before{
+.header .button.icon:before{
     padding-left:6px;
 }
  

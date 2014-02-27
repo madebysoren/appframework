@@ -15,9 +15,9 @@
         var theTarget = newTarget ? newTarget : originalEvent.target;
 
         //stop propagation, and remove default behavior for everything but INPUT, TEXTAREA & SELECT fields
-        if (theTarget.tagName.toUpperCase().indexOf("SELECT") == -1 &&
-            theTarget.tagName.toUpperCase().indexOf("TEXTAREA") == -1 &&
-            theTarget.tagName.toUpperCase().indexOf("INPUT") == -1) //SELECT, TEXTAREA & INPUT
+        if (theTarget.tagName.toUpperCase().indexOf("SELECT") === -1 &&
+            theTarget.tagName.toUpperCase().indexOf("TEXTAREA") === -1 &&
+            theTarget.tagName.toUpperCase().indexOf("INPUT") === -1) //SELECT, TEXTAREA & INPUT
         {
             preventAll(originalEvent);
         }
@@ -61,7 +61,7 @@
         document.addEventListener("mousedown", function (e) {
             mouseDown = true;
             lastTarget = e.target;
-            if (e.target.nodeName.toLowerCase() == "a" && e.target.href.toLowerCase() == "javascript:;")
+            if (e.target.nodeName.toLowerCase() === "a" && e.target.href.toLowerCase() === "javascript:;")
                 e.target.href = "#";
             redirectMouseToTouch("touchstart", e);
             cancelClickMove = false;
@@ -77,7 +77,7 @@
         }, true);
 
         document.addEventListener("mousemove", function (e) {
-            if(e.clientX==prevX&&e.clientY==prevY) return;
+            if(e.clientX===prevX&&e.clientY===prevY) return;
             if (!mouseDown) return;
             redirectMouseToTouch("touchmove", e, lastTarget);
             e.preventDefault();
@@ -85,12 +85,13 @@
             cancelClickMove = true;
         }, true);
     } else { //Win8
-
+        var skipMove=false;
         document.addEventListener("MSPointerDown", function (e) {
 
             mouseDown = true;
+            skipMove=true;
             lastTarget = e.target;
-            if (e.target.nodeName.toLowerCase() == "a" && e.target.href.toLowerCase() == "javascript:;")
+            if (e.target.nodeName.toLowerCase() === "a" && e.target.href.toLowerCase() === "javascript:;")
                 e.target.href = "";
             redirectMouseToTouch("touchstart", e);
             cancelClickMove = false;
@@ -108,7 +109,11 @@
         }, true);
 
         document.addEventListener("MSPointerMove", function (e) {
-            if(e.clientX==prevX&&e.clientY==prevY) return;
+            if(skipMove){
+                skipMove=false;
+                return;
+            }
+            if(e.clientX===prevX&&e.clientY===prevY) return;
             if (!mouseDown) return;
             redirectMouseToTouch("touchmove", e, lastTarget);
             e.preventDefault();
@@ -130,7 +135,7 @@
     document.addEventListener("drop", preventAll, true);
     document.addEventListener("selectstart", preventAll, true);
     document.addEventListener("click", function (e) {
-        if (!e.mouseToTouch && e.target == lastTarget) {
+        if (!e.mouseToTouch && e.target === lastTarget) {
             preventAll(e);
         }
         if (cancelClickMove) {

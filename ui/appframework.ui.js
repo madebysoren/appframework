@@ -37,33 +37,7 @@
             setupCustomTheme();
         }
 
-
-        if (document.readyState == "complete" || document.readyState == "loaded") {
-            if(that.init)
-                that.autoBoot();
-            else{
-                $(window).one("afui:init", function() {
-                    that.autoBoot();
-                });
-            }
-        } else $(document).ready(function() {
-                if(that.init)
-                    that.autoBoot();
-                else{
-                    $(window).one("afui:init", function() {
-                        that.autoBoot();
-                    });
-                }
-            }, false);
-
-
-        if (!("intel" in window)){
-            window.intel = {xdk:{}};
-            window.intel.xdk.webRoot = "";
-        }
-
-
-        $(document).ready(function() {
+        var setupAFDom=function(){
             //boot touchLayer
             //create afui element if it still does not exist
             var afui = document.getElementById("afui");
@@ -80,19 +54,50 @@
             if ($.os.supportsTouch) $.touchLayer(afui);
             setupCustomTheme();
 
-        });
+        };
+
+
+        if (document.readyState === "complete" || document.readyState === "loaded") {
+            setupAFDom();
+            if(that.init)
+                that.autoBoot();
+            else{
+                $(window).one("afui:init", function() {
+                    that.autoBoot();
+                });
+            }
+        } else $(document).ready(
+            function() {
+                setupAFDom();
+                if(that.init)
+                    that.autoBoot();
+                else{
+                    $(window).one("afui:init", function() {
+                        that.autoBoot();
+                    });
+                }
+            },
+        false);
+
+
+
+        if (!("intel" in window)){
+            window.intel = {xdk:{}};
+            window.intel.xdk.webRoot = "";
+        }
+
         //click back event
         window.addEventListener("popstate", function() {
             if(!that.useInteralRouting) return;
             var id = that.getPanelId(document.location.hash);
             var hashChecker = document.location.href.replace(document.location.origin + "/", "");
             //make sure we allow hash changes outside afui
-            if (hashChecker == "#") return;
+            if (hashChecker === "#") return;
             if (id === "" && that.history.length === 1) //Fix going back to first panel and an empty hash
                 id = "#" + that.firstDiv.id;
             if (id === "") return;
             if (af(id).filter(".panel").length === 0) return;
-            if (id != "#" + that.activeDiv.id) that.goBack();
+            if (id !== "#" + that.activeDiv.id) that.goBack();
         }, false);
 
         function setupCustomTheme() {
@@ -123,10 +128,10 @@
                 hackStyle+="-webkit-perspective:1000;";
                 //}
                 //$("head").append("<style id='iosBlurrHack'>#afui .panel  {"+hackStyle+"} #afui .panel > * {-webkit-backface-visibility:hidden;}</style>");
-                $("head").append("<style id='iosBlurrHack'>#afui .panel > * {"+hackStyle+"}</style>");
+                $("head").append("<style id='iosBlurrHack'>#afui .y-scroll > *, #afui .x-scroll > * {"+hackStyle+"}</style>");
             }
             else if ($.os.anroid&&!$.os.androidICS){
-                $.ui.transitionTime="150ms";
+                $.ui.transitionTime = "150ms";
             }
             else if($.os.fennec){
                 $.ui.ready(function(){
@@ -199,12 +204,54 @@
             el = $(el);
             return el.css3Animate(opts);
         },
+        dispatchPanelEvent:function(fnc,myPanel){
+            if (typeof fnc === "string" && window[fnc]) {
+                return window[fnc](myPanel);
+            }
+            else if(fnc.indexOf(".")!==-1){
+                var scope=window,items=fnc.split("."),len=items.length,i=0;
+                for(i;i<len-1;i++){
+                    scope=scope[items[i]];
+                    if(scope===undefined) return;
+                }
+                return scope[items[i]](myPanel);
+            }
+        },
+        /**
+         * This enables the tab bar ability to keep pressed states on elements
+           ```
+           $.ui.enableTabBar();
+           ```
+           @title $.ui.enableTabBar
+         */
+        enableTabBar:function(e){
+            $(document).on("click",".button-grouped.tabbed",function(e){
+                var $el=$(e.target);
+                $el.closest(".tabbed").find(".button").data("ignore-pressed","true").removeClass("pressed");
+                //this is a hack, but the touchEvents plugn will remove pressed
+                $el.closest(".button").addClass("pressed");
+                setTimeout(function(){
+                    $el.closest(".button").addClass("pressed");
+                });
+            });
+        },
+         /**
+         * This disables the tab bar ability to keep pressed states on elements
+           ```
+           $.ui.disableTabBar();
+           ```
+         * @title $.ui.disableTabBar
+         */
+        disableTabBar:function(e){
+            $(document).off("click",".button-grouped.tabbed");
+            $(".button-grouped.tabbed .button").removeAttr("data-ignore-pressed");
+        },
         /**
          * This changes the side menu width
-         * ```
+           ```
            $.ui.setLeftSideMenuWidth('300px');
            ```
-         *@title $.ui.setLeftSideMenuWidth
+         * @title $.ui.setLeftSideMenuWidth
          */
 
         setLeftSideMenuWidth: function(width) {
@@ -212,12 +259,12 @@
             //override the css style
             width = width + "";
             width = width.replace("px", "") + "px";
+            var theWidth=numOnly(window.innerWidth)-numOnly(width);
             $("head").find("style#afui_sideMenuWidth").remove();
-            var css="@media handheld, only screen and (min-width: 768px) {"+
+            var css = "@media handheld, only screen and (min-width: 768px) {"+
                         "#afui > #navbar.hasMenu.splitview, #afui > #header.hasMenu.splitview, #afui > #content.hasMenu.splitview  {"+
                         "    margin-left:"+width+" !important;"+
-                        "    width: -webkit-calc(100% -"+width+") !important;"+
-                        "    width: calc(100% - "+width+") !important;"+
+                        "    width: "+(theWidth)+"px !important;"+
                         "}"+
                     "}"+
                     "#afui #menu {width:" + width + "  !important}";
@@ -228,7 +275,7 @@
         },
         /**
          * This changes the side menu width
-         * ```
+           ```
            $.ui.setRightSideMenuWidth('300px');
            ```
          *@title $.ui.setRightSideMenuWidth
@@ -246,10 +293,9 @@
 
         /**
          * this will disable native scrolling on iOS
-         *
-         ```
-         $.ui.disableNativeScrolling);
-         ```
+            ```
+            $.ui.disableNativeScrolling);
+            ```
          *@title $.ui.disableNativeScrolling
          */
         disableNativeScrolling: function() {
@@ -258,9 +304,9 @@
 
         /**
           * This is a boolean property.   When set to true, we manage history and update the hash
-          ```
-          $.ui.manageHistory=false;//Don't manage for apps using Backbone
-          ```
+             ```
+            $.ui.manageHistory=false;//Don't manage for apps using Backbone
+            ```
           *@title $.ui.manageHistory
           */
         manageHistory: true,
@@ -485,7 +531,7 @@
                 window.history.pushState(newPage, newPage, startPath + "#" + newPage + hashExtras);
                 $(window).trigger("hashchange", null, {
                     newUrl: startPath + "#" + newPage + hashExtras,
-                    oldURL: startPath + previousPage
+                    oldUrl: startPath + previousPage
                 });
             } catch (e) {}
         },
@@ -500,7 +546,7 @@
          */
         updateHash: function(newHash) {
             if (!this.manageHistory) return;
-            newHash = newHash.indexOf("#") == -1 ? "#" + newHash : newHash; //force having the # in the begginning as a standard
+            newHash = newHash.indexOf("#") === -1 ? "#" + newHash : newHash; //force having the # in the begginning as a standard
             previousTarget = newHash;
 
             var previousHash = window.location.hash;
@@ -516,7 +562,7 @@
         /*gets the panel name from an hash*/
         getPanelId: function(hash) {
             var firstSlash = hash.indexOf("/");
-            return firstSlash == -1 ? hash : hash.substring(0, firstSlash);
+            return firstSlash === -1 ? hash : hash.substring(0, firstSlash);
         },
 
         /**
@@ -541,7 +587,7 @@
             var badge = $target.find("span.af-badge");
 
             if (badge.length === 0) {
-                if ($target.css("position") != "absolute") $target.css("position", "relative");
+                if ($target.css("position") !== "absolute") $target.css("position", "relative");
                 badge = $.create("span", {
                     className: "af-badge " + position,
                     html: value
@@ -582,12 +628,10 @@
          */
         toggleNavMenu: function(force) {
             if (!this.showNavMenu) return;
-            if ($.query("#navbar").css("display") != "none" && ((force !== undefined && force !== true) || force === undefined)) {
-               // $.query("#content").css("bottom", "0px");
+            if ($.query("#navbar").css("display") !== "none" && ((force !== undefined && force !== true) || force === undefined)) {
                 $.query("#navbar").hide();
             } else if (force === undefined || (force !== undefined && force === true)) {
                 $.query("#navbar").show();
-              //  $.query("#content").css("bottom", $.query("#navbar").css("height"));
 
             }
         },
@@ -600,12 +644,10 @@
          * @title $.ui.toggleHeaderMenu([force])
          */
         toggleHeaderMenu: function(force) {
-            if ($.query("#header").css("display") != "none" && ((force !== undefined && force !== true) || force === undefined)) {
-               // $.query("#content").css("top", "0px");
+            if ($.query("#header").css("display") !== "none" && ((force !== undefined && force !== true) || force === undefined)) {
                 $.query("#header").hide();
             } else if (force === undefined || (force !== undefined && force === true)) {
                 $.query("#header").show();
-               // $.query("#content").css("top", $.query("#header").css("height"));
             }
         },
 
@@ -874,7 +916,7 @@
             {
                 elems = $.query("#" + elems);
             }
-            if (elems == this.prevHeader) return;
+            if (elems === this.prevHeader) return;
             this._currentHeaderID=elems.prop("id");
             if (this.prevHeader) {
                 //Let's slide them out
@@ -1003,7 +1045,7 @@
          * @title $.ui.setTitle(value)
          */
         setTitle: function(val) {
-            if(this._currentHeaderID!=="defaultHeader") return;
+            if(this._currentHeaderID !== "defaultHeader") return;
             $.query("#header header:not(.ignore)  #pageTitle").html(val);
         },
         /**
@@ -1016,7 +1058,7 @@
          * @title $.ui.setBackButtonText(value)
          */
         setBackButtonText: function(text) {
-            if(this._currentHeaderID!=="defaultHeader") return;
+            if(this._currentHeaderID !== "defaultHeader") return;
             if (this.trimBackButtonText && text.length >= 7)
                 text = text.substring(0, 5) + "...";
             if (this.backButtonText.length > 0) $.query("#header header:not(.ignore) #backButton").html(this.backButtonText);
@@ -1056,7 +1098,7 @@
          */
         modalReference_:null,
         /**
-         * Load a content panel in a modal window.  We set the innerHTML so event binding will not work.  Please use the data-load or panelloaded events to setup any event binding
+         * Load a content panel in a modal window. 
            ```
            $.ui.showModal("#myDiv","fade");
            ```
@@ -1078,7 +1120,7 @@
                 //modalDiv.html($.feat.nativeTouchScroll || !useScroller ? $.query(id).html() : $.query(id).get(0).childNodes[0].innerHTML + '', true);
 
                 var elemsToCopy;
-                if($.feat.nativeTouchScroll || !useScroller ){
+                if($.feat.nativeTouchScroll||$.os.desktop || !useScroller ){
                     elemsToCopy=$panel.contents();
                     modalDiv.append(elemsToCopy);
                 }
@@ -1098,14 +1140,25 @@
                 else {
                     this.scrollingDivs.modal_container.disable();
                 }
-                //move header
-                if(elemsToCopy.filter("header").length>0){
-                    modalParent.find("#modalHeader").append(elemsToCopy.filter("header"));
+                modalDiv.addClass("panel").show();
+                //modal header
+                if($panel.data("header") === "none"){ // no header
+                    modalParent.find("#modalHeader").hide();
+                } else if(elemsToCopy.filter("header").length>0){ // custom header
+                    modalParent.find("#modalHeader").append(elemsToCopy.filter("header")).show();
+                } else { // add default header with close
+                    modalParent.find("#modalHeader").append(
+                        $.create("header", {className:"header"}).append(
+                            $.create("h1", {html:$panel.data("title")}).get(0))
+                        .append(
+                            $.create("a", {className:"button icon close"}).attr("onclick","$.ui.hideModal()").get(0)
+                        )).show();
                 }
-                //move footer
-                if(elemsToCopy.filter("footer").length>0){
-                    
-                    modalParent.find("#modalFooter").append(elemsToCopy.filter("footer"));
+                //modal footer
+                if($panel.data("footer") === "none"){ // no footer
+                    modalParent.find("#modalFooter").hide();
+                } else if(elemsToCopy.filter("footer").length>0){ // custom footer
+                    modalParent.find("#modalFooter").append(elemsToCopy.filter("footer")).show();
                     var tmpAnchors = $.query("#modalFooter > footer > a:not(.button)");
                     if (tmpAnchors.length > 0) {
                         var width = parseFloat(100 / tmpAnchors.length);
@@ -1119,15 +1172,16 @@
                             nodes[i].parentNode.removeChild(nodes[i]);
                         }
                     }
+                } else { // no default footer
+                    modalParent.find("#modalFooter").hide();
                 }
 
                 this.scrollToTop("modal");
                 modalDiv.data("panel", id);
                 var myPanel=$panel.get(0);
                 var fnc = myPanel.getAttribute("data-load");
-                if (typeof fnc == "string" && window[fnc]) {
-                    window[fnc](myPanel);
-                }
+                if(fnc)
+                    this.dispatchPanelEvent(fnc,myPanel);
                 $panel.trigger("loadpanel");
 
             }
@@ -1151,12 +1205,11 @@
 
             var tmp = $.query($cnt.data("panel"));
             var fnc = tmp.data("unload");
-            if (typeof fnc == "string" && window[fnc]) {
-                window[fnc](tmp.get(0));
-            }
+            if(fnc)
+                this.dispatchPanelEvent(fnc,tmp.get(0));
             tmp.trigger("unloadpanel");
             setTimeout(function(){
-                if($.feat.nativeTouchScroll || !useScroller){
+                if($.feat.nativeTouchScroll||$.os.desktop || !useScroller){
                     self.modalReference_.append($("#modalHeader header"));
                     self.modalReference_.append($cnt.contents());
                     self.modalReference_.append($("#modalFooter footer"));
@@ -1192,7 +1245,7 @@
             else newDiv = newDiv.get(0);
 
 
-            if (el.getAttribute("js-scrolling") && (el.getAttribute("js-scrolling").toLowerCase() == "yes" || el.getAttribute("js-scrolling").toLowerCase() == "true")) {
+            if (el.getAttribute("js-scrolling") && (el.getAttribute("js-scrolling").toLowerCase() === "yes" || el.getAttribute("js-scrolling").toLowerCase() === "true")) {
                 $.cleanUpContent(el.childNodes[0], false, true);
                 $(el.childNodes[0]).html(content);
             } else {
@@ -1228,7 +1281,7 @@
          * @title $.ui.addContentDiv(id,content,title);
          */
         addContentDiv: function(el, content, title, refresh, refreshFunc) {
-            el = typeof(el) !== "string" ? el : el.indexOf("#") == -1 ? "#" + el : el;
+            el = typeof(el) !== "string" ? el : el.indexOf("#") === -1 ? "#" + el : el;
             var myEl = $.query(el).get(0);
             var newDiv, newId;
             if (!myEl) {
@@ -1241,7 +1294,7 @@
                 if (!newDiv.getAttribute("data-title") && title) newDiv.setAttribute("data-title",title);
                 newId = (newDiv.id) ? newDiv.id : el.replace("#", ""); //figure out the new id - either the id from the loaded div.panel or the crc32 hash
                 newDiv.id = newId;
-                if (newDiv.id != el) newDiv.setAttribute("data-crc", el.replace("#", ""));
+                if (newDiv.id !== el) newDiv.setAttribute("data-crc", el.replace("#", ""));
             } else {
                 newDiv = myEl;
             }
@@ -1270,24 +1323,25 @@
 
             container = container || this.content;
             //sets up scroll when required and not supported
-            if (!$.feat.nativeTouchScroll && hasScroll) tmp.setAttribute("js-scrolling", "true");
 
-            if (tmp.getAttribute("js-scrolling") && (tmp.getAttribute("js-scrolling").toLowerCase() == "yes" || tmp.getAttribute("js-scrolling").toLowerCase() == "true")) {
+            if (!$.feat.nativeTouchScroll && hasScroll&&!$.os.desktop) tmp.setAttribute("js-scrolling", "true");
+
+            if (tmp.getAttribute("js-scrolling") && (tmp.getAttribute("js-scrolling").toLowerCase() === "yes" || tmp.getAttribute("js-scrolling").toLowerCase() === "true")) {
                 jsScroll = true;
                 hasScroll = true;
             }
-            var title=tmp.getAttribute("data-title")||tmp.title;
-            tmp.title="";
+            var title = tmp.getAttribute("data-title")||tmp.title;
+            tmp.title = "";
             tmp.setAttribute("data-title",title);
 
 
-            if($(tmp).hasClass("no-scroll") || (tmp.getAttribute("scrolling") && tmp.getAttribute("scrolling") == "no")) {
+            if($(tmp).hasClass("no-scroll") || (tmp.getAttribute("scrolling") && tmp.getAttribute("scrolling") === "no")) {
                 hasScroll = false;
                 jsScroll = false;
                 tmp.removeAttribute("js-scrolling");
             }
 
-            if (!jsScroll||$.os.desktop) {
+            if (!jsScroll ) {
                 container.appendChild(tmp);
                 scrollEl = tmp;
                 tmp.style["-webkit-overflow-scrolling"] = "none";
@@ -1328,6 +1382,9 @@
                     autoEnable: false //dont enable the events unnecessarilly
                 }));
                 //backwards compatibility
+                $(tmp).addClass("y-scroll");
+                if(self.horizontalScroll)
+                    $(tmp).addClass("x-scroll");
                 if (refreshFunc)
                     $.bind(this.scrollingDivs[scrollEl.id], "refresh-release", function(trigger) {
                         if (trigger) refreshFunc();
@@ -1389,30 +1446,30 @@
             var hasHeader = what.getAttribute("data-header");
 
             //$asap removed since animations are fixed in css3animate
-            if (hasFooter && hasFooter.toLowerCase() == "none") {
+            if (hasFooter && hasFooter.toLowerCase() === "none") {
                 that.toggleNavMenu(false);
                 hasFooter = false;
             } else {
                 that.toggleNavMenu(true);
             }
-            if (hasFooter && that.customFooter != hasFooter) {
+            if (hasFooter && that.customFooter !== hasFooter) {
                 that.customFooter = hasFooter;
                 that.updateNavbarElements(hasFooter);
-            } else if (hasFooter != that.customFooter) {
+            } else if (hasFooter !== that.customFooter) {
                 if (that.customFooter) that.updateNavbarElements(that.defaultFooter);
                 that.customFooter = false;
             }
-            if (hasHeader && hasHeader.toLowerCase() == "none") {
+            if (hasHeader && hasHeader.toLowerCase() === "none") {
                 that.toggleHeaderMenu(false);
                 hasHeader=false;
             } else {
                 that.toggleHeaderMenu(true);
             }
 
-            if (hasHeader && that.customHeader != hasHeader) {
+            if (hasHeader && that.customHeader !== hasHeader) {
                 that.customHeader = hasHeader;
                 that.updateHeaderElements(hasHeader, goBack);
-            } else if (hasHeader != that.customHeader) {
+            } else if (hasHeader !== that.customHeader) {
                 if (that.customHeader) {
                     that.updateHeaderElements(that.defaultHeader, goBack);
                     //that.setTitle(that.activeDiv.title);
@@ -1442,11 +1499,11 @@
                 $.query("#navbar #" + what.getAttribute("data-tab")).addClass("pressed");
             }
 
-            var hasMenu = what.getAttribute("data-nav");
-            if (hasMenu && this.customMenu != hasMenu) {
+            var hasMenu = what.getAttribute("data-left-menu")||what.getAttribute("data-nav");
+            if (hasMenu && this.customMenu !== hasMenu) {
                 this.customMenu = hasMenu;
                 this.updateSideMenuElements(hasMenu);
-            } else if (hasMenu != this.customMenu) {
+            } else if (hasMenu !== this.customMenu) {
                 if (this.customMenu) {
                     this.updateSideMenuElements(this.defaultMenu);
                 }
@@ -1454,12 +1511,12 @@
             }
 
 
-            var hasAside = what.getAttribute("data-aside");
-            if(hasAside && this.customAside!=hasAside){
+            var hasAside =what.getAttribute("data-right-menu")|| what.getAttribute("data-aside");
+            if(hasAside && this.customAside !== hasAside){
                 this.customAside= hasAside;
                 this.updateAsideElements(hasAside);
             }
-            else if(hasAside != this.customAside) {
+            else if(hasAside !== this.customAside) {
                 if(this.customAside){
                     this.updateAsideElements(this.defaultAside);
                 }
@@ -1469,15 +1526,13 @@
 
             if (oldDiv) {
                 fnc = oldDiv.getAttribute("data-unload");
-                if (typeof fnc == "string" && window[fnc]) {
-                    window[fnc](oldDiv);
-                }
+                if(fnc)
+                    this.dispatchPanelEvent(fnc,oldDiv);
                 $(oldDiv).trigger("unloadpanel");
             }
             var fnc = what.getAttribute("data-load");
-            if (typeof fnc == "string" && window[fnc]) {
-                window[fnc](what);
-            }
+            if(fnc)
+                this.dispatchPanelEvent(fnc,what);
             $(what).trigger("loadpanel");
             if (this.isSideMenuOn()) {
                 that.toggleSideMenu(false);
@@ -1517,7 +1572,7 @@
             var what = null;
             var loadAjax = true;
             anchor = anchor || document.createElement("a"); //Hack to allow passing in no anchor
-            if (target.indexOf("#") == -1) {
+            if (target.indexOf("#") === -1) {
                 var urlHash = "url" + crc32(target); //Ajax urls
                 var crcCheck = $.query("div.panel[data-crc='" + urlHash + "']");
                 if ($.query("#" + target).length > 0) {
@@ -1538,7 +1593,7 @@
                     } else target = "#" + urlHash;
                 }
             }
-            if (target.indexOf("#") == -1 && loadAjax) {
+            if (target.indexOf("#") === -1 && loadAjax) {
                 this.loadAjax(target, newTab, back, transition, anchor);
             } else {
                 this.loadDiv(target, newTab, back, transition);
@@ -1563,7 +1618,7 @@
 
             var slashIndex = what.indexOf("/");
             var hashLink = "";
-            if (slashIndex != -1) {
+            if (slashIndex !== -1) {
                 // Ignore everything after the slash for loading
                 hashLink = what.substr(slashIndex);
                 what = what.substr(0, slashIndex);
@@ -1575,7 +1630,7 @@
                 $(document).trigger("missingpanel", null, {missingTarget: target});
                 return;
             }
-            if (what == this.activeDiv && !back) {
+            if (what === this.activeDiv && !back) {
                 //toggle the menu if applicable
                 if (this.isSideMenuOn()) this.toggleSideMenu(false);
                 return;
@@ -1584,13 +1639,13 @@
             var oldDiv = this.activeDiv;
             var currWhat = what;
 
-            if (what.getAttribute("data-modal") == "true" || what.getAttribute("modal") == "true") {
+            if (what.getAttribute("data-modal") === "true" || what.getAttribute("modal") === "true") {
                 return this.showModal(what.id);
             }
 
 
 
-            if (oldDiv == currWhat) //prevent it from going to itself
+            if (oldDiv === currWhat) //prevent it from going to itself
                 return;
 
             if (newTab) {
@@ -1646,7 +1701,7 @@
                 if (this.history.length > 0) {
                     val = this.history[this.history.length - 1];
                     slashIndex = val.target.indexOf("/");
-                    if (slashIndex != -1) {
+                    if (slashIndex !== -1) {
                         prevId = val.target.substr(0, slashIndex);
                     } else prevId = val.target;
                     el = $.query(prevId).get(0);
@@ -1661,7 +1716,7 @@
             }
             if (newTab) {
                 this.setBackButtonText(this.firstDiv.getAttribute("data-title"));
-                if (what == this.firstDiv) {
+                if (what === this.firstDiv) {
                     this.history.length = 0;
                 }
             }
@@ -1691,10 +1746,10 @@
          */
         loadAjax: function(target, newTab, back, transition, anchor) {
             // XML Request
-            if (this.activeDiv.id == "afui_ajax" && target == this.ajaxUrl) return;
+            if (this.activeDiv.id === "afui_ajax" && target === this.ajaxUrl) return;
             var urlHash = "url" + crc32(target); //Ajax urls
             var that = this;
-            if (target.indexOf("http") == -1) target = intel.xdk.webRoot + target;
+            if (target.indexOf("http") === -1) target = intel.xdk.webRoot + target;
             var xmlhttp = new XMLHttpRequest();
 
             if (anchor && typeof(anchor) !== "object") {
@@ -1704,7 +1759,7 @@
 
             anchor = anchor || document.createElement("a");
             xmlhttp.onreadystatechange = function() {
-                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
                     this.doingTransition = false;
                     var refreshFunction;
                     var doReturn = false;
@@ -1880,6 +1935,13 @@
                 }).get(0);
                 this.viewportContainer.prepend(this.header);
             }
+
+            if (!this.content) {
+                this.content = $.create("div", {
+                    id: "content"
+                }).get(0);
+                $(this.content).insertAfter(this.header);
+            }
             if (!this.menu) {
                 this.menu = $.create("div", {
                     id: "menu",
@@ -1917,12 +1979,6 @@
             }
 
 
-            if (!this.content) {
-                this.content = $.create("div", {
-                    id: "content"
-                }).get(0);
-                this.viewportContainer.append(this.content);
-            }
 
             //insert backbutton (should optionally be left to developer..)
             $(this.header).html("<a id='backButton' class='button'></a> <h1 id='pageTitle'></h1>" + this.header.innerHTML);
@@ -1977,25 +2033,21 @@
             //get first div, defer
             var defer = {};
             var contentDivs = this.viewportContainer.get(0).querySelectorAll(".panel");
+
             for (var i = 0; i < contentDivs.length; i++) {
                 var el = contentDivs[i];
                 var tmp = el;
                 var id;
                 var prevSibling = el.previousSibling;
-                if (el.parentNode && el.parentNode.id != "content") {
-
-                    el.parentNode.removeChild(el);
-                    id = el.id;
-                    if (tmp.getAttribute("selected")) this.firstDiv = $.query("#" + id).get(0);
+                if (el.parentNode && el.parentNode.id !== "content") {
+                    if (tmp.getAttribute("selected")) this.firstDiv = el;
                     this.addDivAndScroll(tmp);
-                    $.query("#" + id).insertAfter(prevSibling);
+                    $.query("#content").append(el);
                 } else if (!el.parsedContent) {
                     el.parsedContent = 1;
-                    el.parentNode.removeChild(el);
-                    id = el.id;
-                    if (tmp.getAttribute("selected")) this.firstDiv = $.query("#" + id).get(0);
-                    this.addDivAndScroll(tmp);
-                    $.query("#" + id).insertAfter(prevSibling);
+                    if (tmp.getAttribute("selected")) this.firstDiv = el;
+                    this.addDivAndScroll(el);
+                    $(el).insertAfter(prevSibling);
                 }
                 if (el.getAttribute("data-defer")) {
                     defer[id] = el.getAttribute("data-defer");
@@ -2081,8 +2133,6 @@
                         $(e.currentTarget).addClass("pressed");
                     });
 
-                  
-
                     //There is a bug in chrome with @media queries where the header was not getting repainted
                     if ($.query("nav").length > 0) {
                         var splitViewClass=that.splitview?" splitview":"";
@@ -2105,7 +2155,7 @@
 
                     var firstPanelId = that.getPanelId(defaultHash);
                     //that.history=[{target:'#'+that.firstDiv.id}];   //set the first id as origin of path
-                    var isFirstPanel = (firstPanelId!==null&&firstPanelId == "#" + that.firstDiv.id);
+                    var isFirstPanel = (firstPanelId!==null&&firstPanelId === "#" + that.firstDiv.id);
                     if (firstPanelId.length > 0 && that.loadDefaultHash && !isFirstPanel) {
                         that.loadContent(defaultHash, true, false, "none"); //load the active page as a newTab with no transition
                     }
@@ -2120,7 +2170,7 @@
                         that.loadContentData(that.firstDiv);
 
                         $.query("#header #backButton").css("visibility", "hidden");
-                        if (that.firstDiv.getAttribute("data-modal") == "true" || that.firstDiv.getAttribute("modal") == "true") {
+                        if (that.firstDiv.getAttribute("data-modal") === "true" || that.firstDiv.getAttribute("modal") === "true") {
                             that.showModal(that.firstDiv.id);
                         }
                     }
@@ -2146,6 +2196,7 @@
             if (window.navigator.standalone||this.isIntel) {
                 this.blockPageScroll();
             }
+            this.enableTabBar();
             this.topClickScroll();
         },
         /**
@@ -2154,7 +2205,7 @@
         topClickScroll: function() {
             var that = this;
             document.getElementById("header").addEventListener("click", function(e) {
-                if (e.clientY <= 15 && e.target.nodeName.toLowerCase() == "h1") //hack - the title spans the whole width of the header
+                if (e.clientY <= 15 && e.target.nodeName.toLowerCase() === "h1") //hack - the title spans the whole width of the header
                     that.scrollingDivs[that.activeDiv.id].scrollToTop("100");
             });
 
@@ -2218,16 +2269,16 @@
     //lookup for a clicked anchor recursively and fire UI own actions when applicable
     var checkAnchorClick = function(e, theTarget) {
         var afui = document.getElementById("afui");
-        if (theTarget == (afui)) {
+        if (theTarget === (afui)) {
             return;
         }
 
         //this technique fails when considerable content exists inside anchor, should be recursive ?
-        if (theTarget.tagName.toLowerCase() != "a" && theTarget.parentNode) return checkAnchorClick(e, theTarget.parentNode); //let's try the parent (recursive)
+        if (theTarget.tagName.toLowerCase() !== "a" && theTarget.parentNode) return checkAnchorClick(e, theTarget.parentNode); //let's try the parent (recursive)
         //anchors
-        if (theTarget.tagName !== "undefined" && theTarget.tagName.toLowerCase() == "a") {
+        if (theTarget.tagName !== "undefined" && theTarget.tagName.toLowerCase() === "a") {
 
-            var custom = (typeof $.ui.customClickHandler == "function") ? $.ui.customClickHandler : false;
+            var custom = (typeof $.ui.customClickHandler === "function") ? $.ui.customClickHandler : false;
             if (custom !== false) {
                 if ($.ui.customClickHandler(theTarget,e)) return e.preventDefault();
 
@@ -2258,18 +2309,18 @@
                 href = href.substring(prefix.length);
             }
             //empty links
-            if (href == "#" || (href.indexOf("#") === href.length - 1) || (href.length === 0 && theTarget.hash.length === 0)) return e.preventDefault();
+            if (href === "#" || (href.indexOf("#") === href.length - 1) || (href.length === 0 && theTarget.hash.length === 0)) return e.preventDefault();
 
             //internal links
             //http urls
-            var urlRegex=/^((http|https):\/\/)/;
-            //only call prevent default on http urls.  If it's a protocol handler, do not call prevent default.
+            var urlRegex=/^((http|https|file):\/\/)/;
+            //only call prevent default on http/fileurls.  If it's a protocol handler, do not call prevent default.
             //It will fall through to the ajax call and fail
             if(theTarget.href.indexOf(":") !== -1 &&urlRegex.test(theTarget.href))
                 e.preventDefault();
             var mytransition = theTarget.getAttribute("data-transition");
             var resetHistory = theTarget.getAttribute("data-resetHistory");
-            resetHistory = resetHistory && resetHistory.toLowerCase() == "true" ? true : false;
+            resetHistory = resetHistory && resetHistory.toLowerCase() === "true" ? true : false;
             href = theTarget.hash.length > 0 ? theTarget.hash : href;
             $.ui.loadContent(href, resetHistory, 0, mytransition, theTarget);
             return;
