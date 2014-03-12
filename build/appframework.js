@@ -1,5 +1,3 @@
-/*! intel-appframework - v2.1.0 - 2014-02-19 */
-
 /**
  * App Framwork  query selector class for HTML5 mobile apps on a WebkitBrowser.
  * Since most mobile devices (Android, iOS, webOS) use a WebKit browser, you only need to target one browser.
@@ -12,8 +10,8 @@
  * @api private
  */
  /* jshint eqeqeq:false */
-  /* global af: true */
- 
+  /* global af: false */
+
 if (!window.af || typeof(af) !== "function") {
 
     /**
@@ -764,7 +762,7 @@ if (!window.af || typeof(af) !== "function") {
                 if (this.length === 0)
                     return (value === nundefined) ? undefined : this;
                 if (value === nundefined && !$.isObject(attr)) {
-                    var val = (this[0].afmCacheId && _attrCache[this[0].afmCacheId][attr]) ? (this[0].afmCacheId && _attrCache[this[0].afmCacheId][attr]) : this[0].getAttribute(attr);
+                    var val = (this[0].afmCacheId && _attrCache[this[0].afmCacheId] && _attrCache[this[0].afmCacheId][attr]) ? _attrCache[this[0].afmCacheId][attr] : this[0].getAttribute(attr);
                     return val;
                 }
                 for (var i = 0; i < this.length; i++) {
@@ -786,6 +784,8 @@ if (!window.af || typeof(af) !== "function") {
                             delete _attrCache[this[i].afmCacheId][attr];
                     } else {
                         this[i].setAttribute(attr, value);
+                        if (this[i].afmCacheId && _attrCache[this[i].afmCacheId][attr])
+                            delete _attrCache[this[i].afmCacheId][attr];
                     }
                 }
                 return this;
@@ -803,7 +803,7 @@ if (!window.af || typeof(af) !== "function") {
             removeAttr: function(attr) {
                 var removeFixer=function(param) {
                     that[i].removeAttribute(param);
-                    if (that[i].afmCacheId && _attrCache[that[i].afmCacheId][attr])
+                    if (that[i].afmCacheId && _attrCache[that[i].afmCacheId])
                         delete _attrCache[that[i].afmCacheId][attr];
                 };
                 var that = this;
@@ -832,7 +832,7 @@ if (!window.af || typeof(af) !== "function") {
                     return (value === nundefined) ? undefined : this;
                 if (value === nundefined && !$.isObject(prop)) {
                     var res;
-                    var val = (this[0].afmCacheId && _propCache[this[0].afmCacheId][prop]) ? (this[0].afmCacheId && _propCache[this[0].afmCacheId][prop]) : !(res = this[0][prop]) && prop in this[0] ? this[0][prop] : res;
+                    var val = (this[0].afmCacheId && _propCache[this[0].afmCacheId] && _propCache[this[0].afmCacheId][prop]) ? _propCache[this[0].afmCacheId][prop] : !(res = this[0][prop]) && prop in this[0] ? this[0][prop] : res;
                     return val;
                 }
                 for (var i = 0; i < this.length; i++) {
@@ -841,7 +841,6 @@ if (!window.af || typeof(af) !== "function") {
                             $(this[i]).prop(key, prop[key]);
                         }
                     } else if ($.isArray(value) || $.isObject(value) || $.isFunction(value)) {
-
                         if (!this[i].afmCacheId)
                             this[i].afmCacheId = $.uuid();
 
@@ -851,6 +850,7 @@ if (!window.af || typeof(af) !== "function") {
                     } else if (value === null && value !== undefined) {
                         $(this[i]).removeProp(prop);
                     } else {
+                        $(this[i]).removeProp(prop);
                         this[i][prop] = value;
                     }
                 }
@@ -870,7 +870,7 @@ if (!window.af || typeof(af) !== "function") {
                 var removePropFn=function(param) {
                     if (that[i][param])
                         that[i][param] = undefined;
-                    if (that[i].afmCacheId && _propCache[that[i].afmCacheId][prop]) {
+                    if (that[i].afmCacheId && _propCache[that[i].afmCacheId]) {
                         delete _propCache[that[i].afmCacheId][prop];
                     }
                 };
@@ -1622,7 +1622,8 @@ if (!window.af || typeof(af) !== "function") {
             complete: empty,
             context: undefined,
             timeout: 0,
-            crossDomain: null
+            crossDomain: null,
+            processData: true
         };
         /**
         * Execute a jsonP call, allowing cross domain scripting
@@ -1711,31 +1712,41 @@ if (!window.af || typeof(af) !== "function") {
         */
         $.ajax = function(opts) {
             var xhr;
-            try {
-
-                var settings = opts || {};
-                for (var key in $.ajaxSettings) {
-                    if (typeof(settings[key]) === "undefined")
-                        settings[key] = $.ajaxSettings[key];
-                }
-
+            var deferred=$.Deferred();
+            var url;
+            if(typeof(opts)==="string")
+            {
+                var oldUrl=opts;
+                opts={
+                    url:oldUrl
+                };
+            }
+            var settings = opts || {};
+            for (var key in $.ajaxSettings) {
+                if (typeof(settings[key]) === "undefined")
+                    settings[key] = $.ajaxSettings[key];
+            }
+            try{
                 if (!settings.url)
                     settings.url = window.location;
-                if (!settings.contentType)
-                    settings.contentType = "application/x-www-form-urlencoded";
+
                 if (!settings.headers)
                     settings.headers = {};
 
                 if (!("async" in settings) || settings.async !== false)
                     settings.async = true;
 
-                if ($.isObject(settings.data))
+                if (settings.processData && $.isObject(settings.data))
                     settings.data = $.param(settings.data);
                 if (settings.type.toLowerCase() === "get" && settings.data) {
                     if (settings.url.indexOf("?") === -1)
                         settings.url += "?" + settings.data;
                     else
                         settings.url += "&" + settings.data;
+                }
+                if(settings.data) {
+                    if (!settings.contentType && settings.contentType!==false)
+                        settings.contentType = "application/x-www-form-urlencoded; charset=UTF-8";
                 }
                 if (!settings.dataType)
                     settings.dataType = "text/html";
@@ -1781,7 +1792,7 @@ if (!window.af || typeof(af) !== "function") {
 
                 //ok, we are really using xhr
                 xhr = new window.XMLHttpRequest();
-
+                $.extend(xhr,deferred.promise);
 
                 xhr.onreadystatechange = function() {
                     var mime = settings.dataType;
@@ -1789,7 +1800,7 @@ if (!window.af || typeof(af) !== "function") {
                         clearTimeout(abortTimeout);
                         var result, error = false;
                         if ((xhr.status >= 200 && xhr.status < 300) || xhr.status === 0 && protocol === "file:") {
-                            if (mime === "application/json" && !(/^\s*$/.test(xhr.responseText))) {
+                            if ((xhr.getResponseHeader("content-type")==="application/json")||(mime === "application/json" && !(/^\s*$/.test(xhr.responseText)))) {
                                 try {
                                     result = JSON.parse(xhr.responseText);
                                 } catch (e) {
@@ -1799,22 +1810,28 @@ if (!window.af || typeof(af) !== "function") {
                                 result = xhr.responseXML;
                             } else if (mime === "text/html") {
                                 result = xhr.responseText;
+
                                 $.parseJS(result);
                             } else
                                 result = xhr.responseText;
                             //If we"re looking at a local file, we assume that no response sent back means there was an error
                             if (xhr.status === 0 && result.length === 0)
                                 error = true;
-                            if (error)
-                                settings.error.call(context, xhr, "parsererror", error);
+                            if (error){
+                                settings.error.call(context,xhr, "parsererror", error);
+                                deferred.reject.call(context,xhr, "parsererror", error);
+                            }
                             else {
+                                deferred.resolve.call(context,result, "succes", error);
                                 settings.success.call(context, result, "success", xhr);
                             }
                         } else {
                             error = true;
+                            deferred.reject.call(context,xhr, "error");
                             settings.error.call(context, xhr, "error");
                         }
-                        settings.complete.call(context, xhr, error ? "error" : "success");
+                        var respText=error?"error":"success";
+                        settings.complete.call(context, xhr,respText);
                     }
                 };
                 xhr.open(settings.type, settings.url, settings.async);
@@ -1839,7 +1856,7 @@ if (!window.af || typeof(af) !== "function") {
                 xhr.send(settings.data);
             } catch (e) {
                 // General errors (e.g. access denied) should also be sent to the error callback
-                console.log(e);
+                deferred.resolve(context,[xhr, "error",e]);
                 settings.error.call(context, xhr, "error", e);
             }
             return xhr;
@@ -2201,12 +2218,10 @@ if (!window.af || typeof(af) !== "function") {
          * @api private
          */
 
-        function findHandlers(element, event, fn, selector) {
-            event = parse(event);
-            if (event.ns)
-                var matcher = matcherFor(event.ns);
+        function findHandlers(element, event, fn, selector,keepEnd) {
+            event = parse(event,keepEnd);
             return (handlers[afmid(element)] || []).filter(function(handler) {
-                return handler && (!event.e || handler.e === event.e) && (!event.ns || matcher.test(handler.ns)) && (!fn || handler.fn === fn || (typeof handler.fn === "function" && typeof fn === "function" && handler.fn === fn)) && (!selector || handler.sel === selector);
+                return handler && (!event.e || handler.e === event.e) && (!event.ns || handler.ns.indexOf(event.ns)!==0) && (!fn || handler.fn === fn || (typeof handler.fn === "function" && typeof fn === "function" && handler.fn === fn)) && (!selector || handler.sel === selector);
             });
         }
         /**
@@ -2216,11 +2231,13 @@ if (!window.af || typeof(af) !== "function") {
          * @api private
          */
 
-        function parse(event) {
+        function parse(event,skipPop) {
             var parts = ("" + event).split(".");
+            if(skipPop!==true)
+                parts.pop();
             return {
-                e: parts[0],
-                ns: parts.slice(1).sort().join(" ")
+                e: event,
+                ns: parts.join(".")
             };
         }
         /**
@@ -2303,13 +2320,12 @@ if (!window.af || typeof(af) !== "function") {
 
             var id = afmid(element);
             eachEvent(events || "", fn, function(event, fn) {
-                findHandlers(element, event, fn, selector).forEach(function(handler) {
+                findHandlers(element, event, fn, selector,true).forEach(function(handler) {                    
                     delete handlers[id][handler.i];
                     element.removeEventListener(handler.e, handler.proxy, false);
                 });
             });
         }
-
         $.event = {
             add: add,
             remove: remove
@@ -2564,7 +2580,7 @@ if (!window.af || typeof(af) !== "function") {
          * The following are for objects and not DOM nodes
          * @api private
          */
-        
+
         /*
          * Bind an event to an object instead of a DOM Node
            ```
@@ -2823,6 +2839,16 @@ if (!window.af || typeof(af) !== "function") {
             };
         });
 
+        $.Deferred = function(){
+            return {
+                reject:function(){},
+                resolve:function(){},
+                promise:{
+                    then:function(){},
+                    fail:function(){}
+                }
+            };
+        };
         /**
          * End of APIS
          * @api private
@@ -2855,3 +2881,185 @@ if (!window.af || typeof(af) !== "function") {
         };
     }
 }
+
+/**
+ * ayepromise.js
+ * @license BSD - https://github.com/cburgmer/ayepromise/commit/299eb65b5ce227873b2f1724c8f5b2bfa723680a
+ * https://github.com/cburgmer/ayepromise
+ */
+
+// UMD header
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        define(factory);
+    } else if (typeof exports === 'object') {
+        module.exports = factory();
+    } else {
+        root.ayepromise = factory();
+    }
+}(this, function () {
+    'use strict';
+
+    var ayepromise = {};
+
+    /* Wrap an arbitrary number of functions and allow only one of them to be
+       executed and only once */
+    var once = function () {
+        var wasCalled = false;
+
+        return function wrapper(wrappedFunction) {
+            return function () {
+                if (wasCalled) {
+                    return;
+                }
+                wasCalled = true;
+                wrappedFunction.apply(null, arguments);
+            };
+        };
+    };
+
+    var getThenableIfExists = function (obj) {
+        // Make sure we only access the accessor once as required by the spec
+        var then = obj && obj.then;
+
+        if (obj !== null &&
+            typeof obj === "object" &&
+            typeof then === "function") {
+
+            return then.bind(obj);
+        }
+    };
+
+    var aThenHandler = function (onFulfilled, onRejected) {
+        var defer = ayepromise.defer();
+
+        var doHandlerCall = function (func, value) {
+            setTimeout(function () {
+                var returnValue;
+                try {
+                    returnValue = func(value);
+                } catch (e) {
+                    defer.reject(e);
+                    return;
+                }
+
+                if (returnValue === defer.promise) {
+                    defer.reject(new TypeError('Cannot resolve promise with itself'));
+                } else {
+                    defer.resolve(returnValue);
+                }
+            }, 1);
+        };
+
+        return {
+            promise: defer.promise,
+            callFulfilled: function (value) {
+                if (onFulfilled && onFulfilled.call) {
+                    doHandlerCall(onFulfilled, value);
+                } else {
+                    defer.resolve(value);
+                }
+            },
+            callRejected: function (value) {
+                if (onRejected && onRejected.call) {
+                    doHandlerCall(onRejected, value);
+                } else {
+                    defer.reject(value);
+                }
+            }
+        };
+    };
+
+    // States
+    var PENDING = 0,
+        FULFILLED = 1,
+        REJECTED = 2;
+
+    ayepromise.defer = function () {
+        var state = PENDING,
+            outcome,
+            thenHandlers = [];
+
+        var doFulfill = function (value) {
+            state = FULFILLED;
+            outcome = value;
+
+            thenHandlers.forEach(function (then) {
+                then.callFulfilled(outcome);
+            });
+        };
+
+        var doReject = function (error) {
+            state = REJECTED;
+            outcome = error;
+
+            thenHandlers.forEach(function (then) {
+                then.callRejected(outcome);
+            });
+        };
+
+        var executeThenHandlerDirectlyIfStateNotPendingAnymore = function (then) {
+            if (state === FULFILLED) {
+                then.callFulfilled(outcome);
+            } else if (state === REJECTED) {
+                then.callRejected(outcome);
+            }
+        };
+
+        var registerThenHandler = function (onFulfilled, onRejected) {
+            var thenHandler = aThenHandler(onFulfilled, onRejected);
+
+            thenHandlers.push(thenHandler);
+
+            executeThenHandlerDirectlyIfStateNotPendingAnymore(thenHandler);
+
+            return thenHandler.promise;
+        };
+
+        var safelyResolveThenable = function (thenable) {
+            // Either fulfill, reject or reject with error
+            var onceWrapper = once();
+            try {
+                thenable(
+                    onceWrapper(transparentlyResolveThenablesAndFulfill),
+                    onceWrapper(doReject)
+                );
+            } catch (e) {
+                onceWrapper(doReject)(e);
+            }
+        };
+
+        var transparentlyResolveThenablesAndFulfill = function (value) {
+            var thenable;
+
+            try {
+                thenable = getThenableIfExists(value);
+            } catch (e) {
+                doReject(e);
+                return;
+            }
+
+            if (thenable) {
+                safelyResolveThenable(thenable);
+            } else {
+                doFulfill(value);
+            }
+        };
+
+        var onceWrapper = once();
+        return {
+            resolve: onceWrapper(transparentlyResolveThenablesAndFulfill),
+            reject: onceWrapper(doReject),
+            promise: {
+                then: registerThenHandler,
+                fail: function (onRejected) {
+                    return registerThenHandler(null, onRejected);
+                }
+            }
+        };
+    };
+    return ayepromise;
+}));
+(function(){
+    $.Deferred=ayepromise.defer;
+})(af);

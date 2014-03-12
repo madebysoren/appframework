@@ -1,4 +1,4 @@
-/*! intel-appframework - v2.1.0 - 2014-02-24 */
+/*! intel-appframework - v2.1.0 - 2014-03-10 */
 
 /**
  * af.actionsheet - an actionsheet for html5 mobile apps
@@ -505,19 +505,23 @@
 })(af);
 
 
+/**
+  * @license MIT - https://github.com/darius/requestAnimationFrame/commit/4f27a5a21902a883330da4663bea953b2f96cb15#diff-9879d6db96fd29134fc802214163b95a
 
-// http://paulirish.com/2011/requestanimationframe-for-smart-animating/
-// http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
-// requestAnimationFrame polyfill by Erik Möller. fixes from Paul Irish and Tino Zijdel
-// MIT license
-// Adapted from https://gist.github.com/paulirish/1579671 which derived from 
-// http://paulirish.com/2011/requestanimationframe-for-smart-animating/
-// http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
+    http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+    http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
+    requestAnimationFrame polyfill by Erik Möller. fixes from Paul Irish and Tino Zijdel
+    MIT license
 
-// requestAnimationFrame polyfill by Erik Möller.
-// Fixes from Paul Irish, Tino Zijdel, Andrew Mao, Klemen Slavič, Darius Bacon
+    Adapted from https://gist.github.com/paulirish/1579671 which derived from 
+    http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+    http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
 
-// MIT license
+    requestAnimationFrame polyfill by Erik Möller.
+    Fixes from Paul Irish, Tino Zijdel, Andrew Mao, Klemen Slavič, Darius Bacon
+*/
+
+
 
 if (!Date.now)
     Date.now = function() {
@@ -1306,21 +1310,21 @@ if (!Date.now)
             //var scorllTop
             var atTop=(this.el.scrollHeight-this.el.scrollTop)===this.el.clientHeight&&newcY<0;
             var atRight=(this.el.scrollWidth-this.el.scrollLeft)===this.el.clientWidth&&newcX<0;
-
+            var preventDefault=e.target.tagName.toLowerCase()!=="input";
             if(this.verticalScroll){
                 if(this.startTop===0&&this.el.scrollTop===0&&newcY>0)
-                    e.preventDefault();
+                    preventDefault&&e.preventDefault();
             }
             if(this.horizontalScroll&&this.startTop===0&&this.el.scrollLeft===0&&newcX>0){
-                e.preventDefault();
+                preventDefault&&e.preventDefault();
             }
 
             if(this.verticalScroll&&atTop){
-                e.preventDefault();
+                preventDefault&&e.preventDefault();
 
             }
             if(this.horizontalScroll&&atRight){
-                e.preventDefault();
+                preventDefault&&e.preventDefault();
             }
 
             if (!this.moved) {
@@ -1567,6 +1571,7 @@ if (!Date.now)
             this.scrollingFinishCB = null;
             this.loggedPcentY = 0;
             this.loggedPcentX = 0;
+            this.androidPerfHack=0;
         };
 
         function createScrollBar(width, height) {
@@ -2007,6 +2012,10 @@ if (!Date.now)
         jsScroller.prototype.calculateTarget = function (scrollInfo) {
             scrollInfo.y = this.lastScrollInfo.y + scrollInfo.deltaY;
             scrollInfo.x = this.lastScrollInfo.x + scrollInfo.deltaX;
+            if(Math.abs(scrollInfo.deltaY)>0)
+                scrollInfo.y+=(scrollInfo.deltaY>0?1:-1)*(this.elementInfo.divHeight*this.androidPerfHack);
+            if(Math.abs(scrollInfo.deltaX)>0)
+                scrollInfo.x+=(scrollInfo.deltaX>0?1:-1)*(this.elementInfo.divWidth*this.androidPerfHack);
         };
         jsScroller.prototype.checkYboundary = function (scrollInfo) {
             var minTop = this.container.clientHeight / 2;
@@ -2068,7 +2077,7 @@ if (!Date.now)
         };
 
         jsScroller.prototype.setMomentum = function (scrollInfo) {
-            var deceleration = 0.0012;
+            var deceleration = 0.0008;
 
             //calculate movement speed
             scrollInfo.speedY = this.divide(scrollInfo.deltaY, scrollInfo.duration);
@@ -2082,14 +2091,14 @@ if (!Date.now)
 
             //set momentum
             if (scrollInfo.absDeltaY > 0) {
-                scrollInfo.deltaY = (scrollInfo.deltaY < 0 ? -1 : 1) * (scrollInfo.absSpeedY * scrollInfo.absSpeedY) / (2 * deceleration);
+                scrollInfo.deltaY += (scrollInfo.deltaY < 0 ? -1 : 1) * (scrollInfo.absSpeedY * scrollInfo.absSpeedY) / (2 * deceleration);
                 scrollInfo.absDeltaY = Math.abs(scrollInfo.deltaY);
                 scrollInfo.duration = scrollInfo.absSpeedY / deceleration;
                 scrollInfo.speedY = scrollInfo.deltaY / scrollInfo.duration;
                 scrollInfo.absSpeedY = Math.abs(scrollInfo.speedY);
                 if (scrollInfo.absSpeedY < deceleration * 100 || scrollInfo.absDeltaY < 5) scrollInfo.deltaY = scrollInfo.absDeltaY = scrollInfo.duration = scrollInfo.speedY = scrollInfo.absSpeedY = 0;
             } else if (scrollInfo.absDeltaX) {
-                scrollInfo.deltaX = (scrollInfo.deltaX < 0 ? -1 : 1) * (scrollInfo.absSpeedX * scrollInfo.absSpeedX) / (2 * deceleration);
+                scrollInfo.deltaX += (scrollInfo.deltaX < 0 ? -1 : 1) * (scrollInfo.absSpeedX * scrollInfo.absSpeedX) / (2 * deceleration);
                 scrollInfo.absDeltaX = Math.abs(scrollInfo.deltaX);
                 scrollInfo.duration = scrollInfo.absSpeedX / deceleration;
                 scrollInfo.speedX = scrollInfo.deltaX / scrollInfo.duration;
@@ -2112,6 +2121,8 @@ if (!Date.now)
                 this.setMomentum(scrollInfo);
             }
             this.calculateTarget(scrollInfo);
+
+            
 
             //get the current top
             var cssMatrix = this.getCSSMatrix(this.el);
@@ -2345,10 +2356,11 @@ if (!Date.now)
 })(af);
 
 /**
- * @copyright: 2011 Intel
- * @description:  This script will replace all drop downs with friendly select controls.  Users can still interact
+ * copyright: 2011 Intel
+ * description:  This script will replace all drop downs with friendly select controls.  Users can still interact
  * with the old drop down box as normal with javascript, and this will be reflected
  */
+
  /* global af*/
  /* global numOnly*/
 (function($) {
@@ -2549,11 +2561,11 @@ if (!Date.now)
                 modalMask.append(container);
                 if ($afui.length > 0) $afui.append(modalMask);
                 else document.body.appendChild(modalMask.get(0));
-
                 that.scroller = $.query("#afSelectBoxfix").scroller({
                     scroller: false,
                     verticalScroll: true,
-                    vScrollCSS: "jqselectscrollBarV"
+                    vScrollCSS: "afselectscrollBarV",
+                    hasParent:true
                 });
 
                 $("#afModalMask").on("click",function(e){
@@ -3414,10 +3426,11 @@ if (!Date.now)
 
 /**
  * af.popup - a popup/alert library for html5 mobile apps
- * @copyright Indiepath 2011 - Tim Fisher
+ * copyright Indiepath 2011 - Tim Fisher
  * Modifications/enhancements by Intel for App Framework
  *
  */
+ 
 /* EXAMPLE
  $.query("body").popup({
         title:"Alert! Alert!",
@@ -4136,7 +4149,7 @@ if (!Date.now)
                         handler: function () { alert("goodbye"); }
                     }]");
            ```
-         * @param {String,Array} links
+         * @param {(string|Array.<string>)} links
          * @title $.ui.actionsheet()
          */
         actionsheet: function(opts) {
@@ -4157,7 +4170,7 @@ if (!Date.now)
                       });
            $.ui.popup('Hi there');
            ```
-         * @param {Object|String} options
+         * @param {(object|string)} options
          * @title $.ui.popup(opts)
          */
         popup: function(opts) {
@@ -4169,7 +4182,7 @@ if (!Date.now)
          ```
          $.ui.blockUI(.9)
          ````
-         * @param {Float} opacity
+         * @param {number} opacity
          * @title $.ui.blockUI(opacity)
          */
         blockUI: function(opacity) {
@@ -4242,7 +4255,7 @@ if (!Date.now)
            ```
            $.ui.ready(function(){console.log('afui is ready');});
            ```
-         * @param {Function} function to execute
+         * @param {function} param function to execute
          * @title $.ui.ready
          */
         ready: function(param) {
@@ -4260,7 +4273,7 @@ if (!Date.now)
            ```
            $.ui.setBackButtonStyle('newClass');
            ```
-         * @param {String} new class name
+         * @param {string} className new class name
          * @title $.ui.setBackButtonStyle(class)
          */
         setBackButtonStyle: function(className) {
@@ -4274,7 +4287,7 @@ if (!Date.now)
            ```
 
          * @title $.ui.goBack()
-         * @param {Number} [delta=1]  relative position from the last element (> 0)
+         * @param {number=} delta relative position from the last element (> 0)
          */
         goBack: function(delta) {
             delta = Math.min(Math.abs(~~delta || 1), this.history.length);
@@ -4320,7 +4333,7 @@ if (!Date.now)
                 window.history.pushState(newPage, newPage, startPath + "#" + newPage + hashExtras);
                 $(window).trigger("hashchange", null, {
                     newUrl: startPath + "#" + newPage + hashExtras,
-                    oldURL: startPath + previousPage
+                    oldUrl: startPath + previousPage
                 });
             } catch (e) {}
         },
@@ -4329,7 +4342,7 @@ if (!Date.now)
         /**
          * Updates the current window hash
          *
-         * @param {String} newHash New Hash value
+         * @param {string} newHash New Hash value
          * @title $.ui.updateHash(newHash)
          * @api private
          */
@@ -4363,10 +4376,10 @@ if (!Date.now)
            ```
            $.ui.updateBadge("#mydiv","3","bl","green");
            ```
-         * @param {String} target
-         * @param {String} Value
-         * @param {String} [position]
-         * @param {String|Object} [color or CSS hash]
+         * @param {string} target
+         * @param {string} value
+         * @param {string=} position
+         * @param {(string=|object)} color Color or CSS hash
          * @title $.ui.updateBadge(target,value,[position],[color])
          */
         updateBadge: function(target, value, position, color) {
@@ -4400,7 +4413,7 @@ if (!Date.now)
            ```
            $.ui.removeBadge("#mydiv");
            ```
-         * @param {String} target
+         * @param {string} target
          * @title $.ui.removeBadge(target)
          */
         removeBadge: function(target) {
@@ -4412,7 +4425,7 @@ if (!Date.now)
            $.ui.toggleNavMenu();//toggle it
            $.ui.toggleNavMenu(true); //force show it
            ```
-         * @param {Boolean} [force]
+         * @param {boolean=} force
          * @title $.ui.toggleNavMenu([force])
          */
         toggleNavMenu: function(force) {
@@ -4429,7 +4442,7 @@ if (!Date.now)
            ```
            $.ui.toggleHeaderMenu();//toggle it
            ```
-         * @param {Boolean} [force]
+         * @param {boolean=} force
          * @title $.ui.toggleHeaderMenu([force])
          */
         toggleHeaderMenu: function(force) {
@@ -4455,9 +4468,10 @@ if (!Date.now)
            ```
            $.ui.toggleSideMenu();//toggle it
            ```
-         * @param {Boolean} [force]
-         * @param {Function} [callback] Callback function to execute after menu toggle is finished
-         * @param {int} [time] Time to run the transition
+         * @param {boolean=} force
+         * @param {function=} callback Callback function to execute after menu toggle is finished
+         * @param {number=} time Time to run the transition
+         * @param {boolean=} aside 
          * @title $.ui.toggleSideMenu([force],[callback],[time])
          */
         toggleLeftSideMenu: function(force, callback, time, aside) {
@@ -4655,7 +4669,7 @@ if (!Date.now)
            ```
            $.ui.updateNavbarElements(elements);
            ```
-         * @param {String|Object} Elements
+         * @param {(string|object)} elems
          * @title $.ui.updateNavbarElements(Elements)
          */
         updateNavbarElements: function(elems) {
@@ -4696,7 +4710,8 @@ if (!Date.now)
            ```
            $.ui.updateHeaderElements(elements);
            ```
-         * @param {String|Object} Elements
+         * @param {(string|object)} elems
+         * @param {boolean} goBack
          * @title $.ui.updateHeaderElements(Elements)
          */
         updateHeaderElements: function(elems, goBack) {
@@ -4798,8 +4813,8 @@ if (!Date.now)
            ```
            $.ui.updateSideMenuElements(elements);
            ```
-         * @param {String|Object} Elements
-         * @title $.ui.updateSideMenuElements(Elements)
+         * @param {...(string|object)} elements
+         * @title $.ui.updateSideMenuElements(elements)
          */
         updateSideMenuElements: function() {
             return this.updateLeftSideMenuElements.apply(this,arguments);
@@ -4830,7 +4845,7 @@ if (!Date.now)
            $.ui.setTitle("new title");
            ```
 
-         * @param {String} value
+         * @param {string} val
          * @title $.ui.setTitle(value)
          */
         setTitle: function(val) {
@@ -4843,8 +4858,8 @@ if (!Date.now)
            $.ui.setBackButtonText("GO...");
            ```
 
-         * @param {String} value
-         * @title $.ui.setBackButtonText(value)
+         * @param {string} text
+         * @title $.ui.setBackButtonText(text)
          */
         setBackButtonText: function(text) {
             if(this._currentHeaderID !== "defaultHeader") return;
@@ -4867,7 +4882,7 @@ if (!Date.now)
            $.ui.showMask('Doing work')
            ```
 
-         * @param {String} [text]
+         * @param {string=} text
          * @title $.ui.showMask(text);
          */
         showMask: function(text) {
@@ -4891,8 +4906,8 @@ if (!Date.now)
            ```
            $.ui.showModal("#myDiv","fade");
            ```
-         * @param {String|Object} panel to show
-         * @param {String} [transition]
+         * @param {(string|object)} id panel to show
+         * @param {string=} trans
          * @title $.ui.showModal();
          */
         showModal: function(id, trans) {
@@ -5018,8 +5033,8 @@ if (!Date.now)
            ```
            $.ui.updatePanel("#myDiv","This is the new content");
            ```
-         * @param {String,Object} panel
-         * @param {String} html to update with
+         * @param {(string|object)} id
+         * @param {string} content HTML to update with
          * @title $.ui.updatePanel(id,content);
          */
         updatePanel: function(id, content) {
@@ -5052,9 +5067,9 @@ if (!Date.now)
            ```
            $.ui.updateContentDiv("#myDiv","This is the new content");
            ```
-         * @param {String,Object} panel
-         * @param {String} html to update with
-         * @title $.ui.updateContentDiv(id,content);
+         * @param {(string|object)} id
+         * @param {string} content HTML to update with
+         * @title $.ui.updateContentDiv(id, content);
          */
         updateContentDiv: function(id, content) {
             return this.updatePanel(id, content);
@@ -5064,10 +5079,12 @@ if (!Date.now)
            ```
            $.ui.addContentDiv("myDiv","This is the new content","Title");
            ```
-         * @param {String|Object} Element to add
-         * @param {String} Content
-         * @param {String} title
-         * @title $.ui.addContentDiv(id,content,title);
+         * @param {(string|object)} el Element to add
+         * @param {string} content
+         * @param {string} title
+         * @param {boolean=} refresh Enable refresh on pull
+         * @param {function=} refreshFunc 
+         * @title $.ui.addContentDiv(id, content, title);
          */
         addContentDiv: function(el, content, title, refresh, refreshFunc) {
             el = typeof(el) !== "string" ? el : el.indexOf("#") === -1 ? "#" + el : el;
@@ -5099,7 +5116,10 @@ if (!Date.now)
            ```
            $.ui.addDivAndScroll(object);
            ```
-         * @param {Object} Element
+         * @param {object} tmp Element
+         * @param {boolean=} refreshPull
+         * @param {function} refreshFunc
+         * @param {object=} container
          * @title $.ui.addDivAndScroll(element);
          * @api private
          */
@@ -5190,8 +5210,8 @@ if (!Date.now)
            ```
            $.ui.scrollToTop(id);
            ```
-         * @param {String} id
-         * @param {string} Time to scroll
+         * @param {string} id
+         * @param {string} time Time to scroll
          * @title $.ui.scrollToTop(id);
          */
         scrollToTop: function(id, time) {
@@ -5206,8 +5226,8 @@ if (!Date.now)
            ```
            $.ui.scrollToBottom(id,time);
            ```
-         * @param {String} id
-         * @param {string} Time to scroll
+         * @param {string} id
+         * @param {string} time Time to scroll
          * @title $.ui.scrollToBottom(id);
          */
         scrollToBottom: function(id, time) {
@@ -5221,11 +5241,12 @@ if (!Date.now)
          *  This is used when a transition fires to do helper events.  We check to see if we need to change the nav menus, footer, and fire
          * the load/onload functions for panels
            ```
-           $.ui.parsePanelFunctions(currentDiv,oldDiv);
+           $.ui.parsePanelFunctions(currentDiv, oldDiv);
            ```
-         * @param {Object} current div
-         * @param {Object} old div
-         * @title $.ui.parsePanelFunctions(currentDiv,oldDiv);
+         * @param {object} what current div
+         * @param {object=} oldDiv old div
+         * @param {boolean=} goBack
+         * @title $.ui.parsePanelFunctions(currentDiv, oldDiv);
          * @api private
          */
         parsePanelFunctions: function(what, oldDiv, goBack) {
@@ -5341,11 +5362,12 @@ if (!Date.now)
            ```
            $.ui.loadContent("#main",false,false,"up");
            ```
-         * @param {String} target
-         * @param {Boolean} newtab (resets history)
-         * @param {Boolean} go back (initiate the back click)
-         * @param {String} transition
-         * @title $.ui.loadContent(target,newTab,goBack,transition);
+         * @param {string} target
+         * @param {boolean=} newtab (resets history)
+         * @param {boolean=} go back (initiate the back click)
+         * @param {string=} transition
+         * @param {object=} anchor
+         * @title $.ui.loadContent(target, newTab, goBack, transition, anchor);
          * @api public
          */
         loadContent: function(target, newTab, back, transition, anchor) {
@@ -5393,10 +5415,10 @@ if (!Date.now)
            ```
            $.ui.loadDiv("#main",false,false,"up");
            ```
-         * @param {String} target
-         * @param {Boolean} newtab (resets history)
-         * @param {Boolean} go back (initiate the back click)
-         * @param {String} transition
+         * @param {string} target
+         * @param {boolean=} newtab (resets history)
+         * @param {boolean=} back Go back (initiate the back click)
+         * @param {string=} transition
          * @title $.ui.loadDiv(target,newTab,goBack,transition);
          * @api private
          */
@@ -5477,10 +5499,10 @@ if (!Date.now)
            ```
            $.ui.loadContentData("#main",false,false,"up");
            ```
-         * @param {String} target
-         * @param {Boolean} newtab (resets history)
-         * @param {Boolean} go back (initiate the back click)
-         * @param {String} transition
+         * @param {string} target
+         * @param {boolean=} newtab (resets history)
+         * @param {boolean=} go back (initiate the back click)
+         * @param {string=} transition
          * @title $.ui.loadDiv(target,newTab,goBack,transition);
          * @api private
          */
@@ -5526,10 +5548,11 @@ if (!Date.now)
            ```
            $.ui.loadDiv("page.html",false,false,"up");
            ```
-         * @param {String} target
-         * @param {Boolean} newtab (resets history)
-         * @param {Boolean} go back (initiate the back click)
-         * @param {String} transition
+         * @param {string} target
+         * @param {boolean=} newtab (resets history)
+         * @param {boolean=} go back (initiate the back click)
+         * @param {string=} transition
+         * @param {object=} anchor
          * @title $.ui.loadDiv(target,newTab,goBack,transition);
          * @api private
          */
@@ -5674,25 +5697,14 @@ if (!Date.now)
                 enterEditEl = el;
             });
             //enter-edit-reshape panel padding and scroll adjust
-            $.bind($.touchLayer, "enter-edit-reshape", function() {
-                //onReshape UI fixes
-                //check if focused element is within active panel
-                var jQel = $(enterEditEl);
-                var jQactive = jQel.closest(that.activeDiv);
-                if (jQactive && jQactive.size() > 0) {
-                    if ($.os.ios || $.os.chrome) {
-                        var paddingTop, paddingBottom;
-                        if (document.body.scrollTop) {
-                            paddingTop = document.body.scrollTop - jQactive.offset().top;
-                        } else {
-                            paddingTop = 0;
-                        }
-                        //not exact, can be a little above the actual value
-                        //but we haven't found an accurate way to measure it and this is the best so far
-                        paddingBottom = jQactive.offset().bottom - jQel.offset().bottom;
-                        that.scrollingDivs[that.activeDiv.id].setPaddings(paddingTop, paddingBottom);
-
-                    } else if ($.os.android || $.os.blackberry) {
+            if($.os.android&&!$.os.androidICS)
+            {
+                $.bind($.touchLayer, "enter-edit-reshape", function() {
+                    //onReshape UI fixes
+                    //check if focused element is within active panel
+                    var jQel = $(enterEditEl);
+                    var jQactive = jQel.closest(that.activeDiv);
+                    if (jQactive && jQactive.size() > 0) {
                         var elPos = jQel.offset();
                         var containerPos = jQactive.offset();
                         if (elPos.bottom > containerPos.bottom && elPos.height < containerPos.height) {
@@ -5700,16 +5712,13 @@ if (!Date.now)
                             that.scrollingDivs[that.activeDiv.id].scrollToItem(jQel, "bottom");
                         }
                     }
-                }
-            });
-            if ($.os.ios) {
+                });
                 $.bind($.touchLayer, "exit-edit-reshape", function() {
                     if (that.activeDiv && that.activeDiv.id && that.scrollingDivs.hasOwnProperty(that.activeDiv.id)) {
                         that.scrollingDivs[that.activeDiv.id].setPaddings(0, 0);
                     }
                 });
             }
-
 
             //elements setup
             if (!this.navbar) {
@@ -5823,10 +5832,11 @@ if (!Date.now)
             var defer = {};
             var contentDivs = this.viewportContainer.get(0).querySelectorAll(".panel");
 
+
             for (var i = 0; i < contentDivs.length; i++) {
                 var el = contentDivs[i];
                 var tmp = el;
-                var id;
+                var id = el.id;
                 var prevSibling = el.previousSibling;
                 if (el.parentNode && el.parentNode.id !== "content") {
                     if (tmp.getAttribute("selected")) this.firstDiv = el;
@@ -5839,12 +5849,12 @@ if (!Date.now)
                     $(el).insertAfter(prevSibling);
                 }
                 if (el.getAttribute("data-defer")) {
-                    defer[id] = el.getAttribute("data-defer");
+                    defer[el.id] = el.getAttribute("data-defer");
                 }
-                if (!this.firstDiv) this.firstDiv = $.query("#" + id).get(0);
-
+                if (!this.firstDiv) this.firstDiv = el;
                 el = null;
             }
+
             contentDivs = null;
             var loadingDefer = false;
             var toLoad = Object.keys(defer).length;
@@ -5976,6 +5986,12 @@ if (!Date.now)
                     $(document).one("defer:loaded", loadFirstDiv);
                 } else loadFirstDiv();
             }
+            else {
+                //Don't block afui:ready from dispatching, even though there's no content
+                setTimeout(function(){
+                        $(document).trigger("afui:ready");
+                    });
+            }
             $.bind(that, "content-loaded", function() {
                 if (that.loadContentQueue.length > 0) {
                     var tmp = that.loadContentQueue.splice(0, 1)[0];
@@ -6026,7 +6042,8 @@ if (!Date.now)
         /**
          * This must be called at the end of every transition to hide the old div and reset the doingTransition variable
          *
-         * @param {Object} Div that transitioned out
+         * @param {object} oldDiv Div that transitioned out
+         * @param {object=} currDiv 
          * @title $.ui.finishTransition(oldDiv)
          */
         finishTransition: function(oldDiv, currDiv) {
@@ -6040,7 +6057,7 @@ if (!Date.now)
         /**
          * This must be called at the end of every transition to remove all transforms and transitions attached to the inView object (performance + native scroll)
          *
-         * @param {Object} Div that transitioned out
+         * @param {object} inViewDiv Div that transitioned out
          * @title $.ui.finishTransition(oldDiv)
          */
         clearAnimations: function(inViewDiv) {

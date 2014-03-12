@@ -1,5 +1,5 @@
 /**
- * App Framwork  query selector class for HTML5 mobile apps on a WebkitBrowser.
+ * App Framework  query selector class for HTML5 mobile apps on a WebkitBrowser.
  * Since most mobile devices (Android, iOS, webOS) use a WebKit browser, you only need to target one browser.
  * We are able to increase the speed greatly by removing support for legacy desktop browsers and taking advantage of browser features, like native JSON parsing and querySelectorAll
 
@@ -10,8 +10,8 @@
  * @api private
  */
  /* jshint eqeqeq:false */
-  /* global af: true */
- 
+  /* global af: false */
+
 if (!window.af || typeof(af) !== "function") {
 
     /**
@@ -248,6 +248,7 @@ if (!window.af || typeof(af) !== "function") {
             for (var i = 0, iz = nodes.length; i < iz; i++)
                 obj[obj.length++] = nodes[i];
         }
+
         /**
         * Checks to see if the parameter is a $afm object
             ```
@@ -255,13 +256,14 @@ if (!window.af || typeof(af) !== "function") {
             $.is$(foo);
             ```
 
-        * @param {Object} element
-        * @return {Boolean}
+        * @param {*} obj
+        * @return {boolean}
         * @title $.is$(param)
         */
         $.is$ = function(obj) {
-            return obj instanceof $afm;
+            return (obj instanceof $afm);
         };
+
         /**
         * Map takes in elements and executes a callback function on each and returns a collection
         ```
@@ -359,8 +361,8 @@ if (!window.af || typeof(af) !== "function") {
             $.isArray(arr);
             ```
 
-        * @param {Object} element
-        * @return {Boolean}
+        * @param {*} obj
+        * @return {boolean}
         * @example $.isArray([1]);
         * @title $.isArray(param)
         */
@@ -375,8 +377,8 @@ if (!window.af || typeof(af) !== "function") {
             $.isFunction(func);
             ```
 
-        * @param {Object} element
-        * @return {Boolean}
+        * @param {*} obj
+        * @return {boolean}
         * @title $.isFunction(param)
         */
         $.isFunction = function(obj) {
@@ -387,21 +389,21 @@ if (!window.af || typeof(af) !== "function") {
             ```
             var foo={bar:"bar"};
             $.isObject(foo);
+        
             ```
-
-        * @param {Object} element
-        * @return {Boolean}
+		* @param {*} obj
+		* @returns {boolean}
         * @title $.isObject(param)
-        */
+		*/
         $.isObject = function(obj) {
             return typeof obj === "object" && obj !== null;
         };
 
         /**
-         * Prototype for afm object.  Also extens $.fn
+         * Prototype for afm object.  Also extends $.fn
          */
         $.fn = $afm.prototype = {
-            namepsace:"appframework",
+            namespace: "appframework",
             constructor: $afm,
             forEach: emptyArray.forEach,
             reduce: emptyArray.reduce,
@@ -762,7 +764,7 @@ if (!window.af || typeof(af) !== "function") {
                 if (this.length === 0)
                     return (value === nundefined) ? undefined : this;
                 if (value === nundefined && !$.isObject(attr)) {
-                    var val = (this[0].afmCacheId && _attrCache[this[0].afmCacheId][attr]) ? (this[0].afmCacheId && _attrCache[this[0].afmCacheId][attr]) : this[0].getAttribute(attr);
+                    var val = (this[0].afmCacheId && _attrCache[this[0].afmCacheId] && _attrCache[this[0].afmCacheId][attr]) ? _attrCache[this[0].afmCacheId][attr] : this[0].getAttribute(attr);
                     return val;
                 }
                 for (var i = 0; i < this.length; i++) {
@@ -784,6 +786,8 @@ if (!window.af || typeof(af) !== "function") {
                             delete _attrCache[this[i].afmCacheId][attr];
                     } else {
                         this[i].setAttribute(attr, value);
+                        if (this[i].afmCacheId && _attrCache[this[i].afmCacheId][attr])
+                            delete _attrCache[this[i].afmCacheId][attr];
                     }
                 }
                 return this;
@@ -801,7 +805,7 @@ if (!window.af || typeof(af) !== "function") {
             removeAttr: function(attr) {
                 var removeFixer=function(param) {
                     that[i].removeAttribute(param);
-                    if (that[i].afmCacheId && _attrCache[that[i].afmCacheId][attr])
+                    if (that[i].afmCacheId && _attrCache[that[i].afmCacheId])
                         delete _attrCache[that[i].afmCacheId][attr];
                 };
                 var that = this;
@@ -830,7 +834,7 @@ if (!window.af || typeof(af) !== "function") {
                     return (value === nundefined) ? undefined : this;
                 if (value === nundefined && !$.isObject(prop)) {
                     var res;
-                    var val = (this[0].afmCacheId && _propCache[this[0].afmCacheId][prop]) ? (this[0].afmCacheId && _propCache[this[0].afmCacheId][prop]) : !(res = this[0][prop]) && prop in this[0] ? this[0][prop] : res;
+                    var val = (this[0].afmCacheId && _propCache[this[0].afmCacheId] && _propCache[this[0].afmCacheId][prop]) ? _propCache[this[0].afmCacheId][prop] : !(res = this[0][prop]) && prop in this[0] ? this[0][prop] : res;
                     return val;
                 }
                 for (var i = 0; i < this.length; i++) {
@@ -839,7 +843,6 @@ if (!window.af || typeof(af) !== "function") {
                             $(this[i]).prop(key, prop[key]);
                         }
                     } else if ($.isArray(value) || $.isObject(value) || $.isFunction(value)) {
-
                         if (!this[i].afmCacheId)
                             this[i].afmCacheId = $.uuid();
 
@@ -849,6 +852,7 @@ if (!window.af || typeof(af) !== "function") {
                     } else if (value === null && value !== undefined) {
                         $(this[i]).removeProp(prop);
                     } else {
+                        $(this[i]).removeProp(prop);
                         this[i][prop] = value;
                     }
                 }
@@ -868,7 +872,7 @@ if (!window.af || typeof(af) !== "function") {
                 var removePropFn=function(param) {
                     if (that[i][param])
                         that[i][param] = undefined;
-                    if (that[i].afmCacheId && _propCache[that[i].afmCacheId][prop]) {
+                    if (that[i].afmCacheId && _propCache[that[i].afmCacheId]) {
                         delete _propCache[that[i].afmCacheId][prop];
                     }
                 };
@@ -1457,7 +1461,7 @@ if (!window.af || typeof(af) !== "function") {
             },
             /**
             * Gets or set data-* attribute parameters on elements (when a string)
-            * When used as a getter, it"s only the first element
+            * When used as a getter, it's only the first element
                 ```
                 $().data("foo"); //Gets the data-foo attribute for the first element
                 $().data("foo","bar"); //Sets the data-foo attribute for all elements
@@ -1710,18 +1714,24 @@ if (!window.af || typeof(af) !== "function") {
         */
         $.ajax = function(opts) {
             var xhr;
-            try {
-
-                var settings = opts || {};
-                for (var key in $.ajaxSettings) {
-                    if (typeof(settings[key]) === "undefined")
-                        settings[key] = $.ajaxSettings[key];
-                }
-
+            var deferred=$.Deferred();
+            var url;
+            if(typeof(opts)==="string")
+            {
+                var oldUrl=opts;
+                opts={
+                    url:oldUrl
+                };
+            }
+            var settings = opts || {};
+            for (var key in $.ajaxSettings) {
+                if (typeof(settings[key]) === "undefined")
+                    settings[key] = $.ajaxSettings[key];
+            }
+            try{
                 if (!settings.url)
                     settings.url = window.location;
-                if (!settings.contentType && settings.contentType!==false)
-                    settings.contentType = "application/x-www-form-urlencoded; charset=UTF-8";
+
                 if (!settings.headers)
                     settings.headers = {};
 
@@ -1735,6 +1745,10 @@ if (!window.af || typeof(af) !== "function") {
                         settings.url += "?" + settings.data;
                     else
                         settings.url += "&" + settings.data;
+                }
+                if(settings.data) {
+                    if (!settings.contentType && settings.contentType!==false)
+                        settings.contentType = "application/x-www-form-urlencoded; charset=UTF-8";
                 }
                 if (!settings.dataType)
                     settings.dataType = "text/html";
@@ -1780,40 +1794,57 @@ if (!window.af || typeof(af) !== "function") {
 
                 //ok, we are really using xhr
                 xhr = new window.XMLHttpRequest();
-
+                $.extend(xhr,deferred.promise);
 
                 xhr.onreadystatechange = function() {
                     var mime = settings.dataType;
                     if (xhr.readyState === 4) {
                         clearTimeout(abortTimeout);
                         var result, error = false;
+                        var contentType=xhr.getResponseHeader("content-type");
                         if ((xhr.status >= 200 && xhr.status < 300) || xhr.status === 0 && protocol === "file:") {
-                            if (mime === "application/json" && !(/^\s*$/.test(xhr.responseText))) {
+                            if ((contentType==="application/json")||(mime === "application/json" && !(/^\s*$/.test(xhr.responseText)))) {
                                 try {
                                     result = JSON.parse(xhr.responseText);
                                 } catch (e) {
                                     error = e;
                                 }
-                            } else if (mime === "application/xml, text/xml") {
+                            }
+                            else if(contentType.indexOf("javascript")!==-1){
+                                try{
+                                    result=xhr.responseText;
+                                    window["eval"](result);
+                                }
+                                catch(e){
+                                    console.log(e);
+                                }
+                            }
+                            else if (mime === "application/xml, text/xml") {
                                 result = xhr.responseXML;
                             } else if (mime === "text/html") {
                                 result = xhr.responseText;
                                 $.parseJS(result);
-                            } else
+                            }
+                            else
                                 result = xhr.responseText;
-                            //If we"re looking at a local file, we assume that no response sent back means there was an error
+                            //If we're looking at a local file, we assume that no response sent back means there was an error
                             if (xhr.status === 0 && result.length === 0)
                                 error = true;
-                            if (error)
+                            if (error){
                                 settings.error.call(context, xhr, "parsererror", error);
+                                deferred.reject.call(context, xhr, "parsererror", error);
+                            }
                             else {
+                                deferred.resolve.call(context, result, "succes", xhr);
                                 settings.success.call(context, result, "success", xhr);
                             }
                         } else {
                             error = true;
+                            deferred.reject.call(context,xhr, "error");
                             settings.error.call(context, xhr, "error");
                         }
-                        settings.complete.call(context, xhr, error ? "error" : "success");
+                        var respText=error?"error":"success";
+                        settings.complete.call(context, xhr,respText);
                     }
                 };
                 xhr.open(settings.type, settings.url, settings.async);
@@ -1838,7 +1869,7 @@ if (!window.af || typeof(af) !== "function") {
                 xhr.send(settings.data);
             } catch (e) {
                 // General errors (e.g. access denied) should also be sent to the error callback
-                console.log(e);
+                deferred.resolve(context, xhr, "error",e);
                 settings.error.call(context, xhr, "error", e);
             }
             return xhr;
@@ -1912,6 +1943,42 @@ if (!window.af || typeof(af) !== "function") {
             });
         };
 
+        /**
+        * Shorthand call to an Ajax request that expects a javascript file.
+            ```
+            $.getScript("myscript.js",function(data){});
+            ```
+
+        * @param {String} javascript file to load
+        * @param {Function} [success]
+        * @title $.getScript(url,success)
+        */
+        $.getScript = function(url,success){
+            var isCrossDomain=/^([\w-]+:)?\/\/([^\/]+)/.test(url);
+            if(isCrossDomain){
+                //create the script
+                var deferred = $.Deferred();
+                var scr=$.create("script",{async:true,src:url}).get(0);
+                scr.onload=function(){                    
+                    success&&success();
+                    deferred.resolve.call(this,"success");
+                    $(this).remove();
+                };
+                scr.onerror=function(){
+                    $(this).remove();
+                    deferred.reject.call(this,"success");
+                }
+                document.head.appendChild(scr);
+                return deferred.promise;
+            }
+            else {
+                return this.ajax({
+                    url:url,
+                    success:success,
+                    dataType:"script"
+                });
+            }
+        };
         /**
         * Converts an object into a key/value par with an optional prefix.  Used for converting objects to a query string
             ```
@@ -2200,12 +2267,10 @@ if (!window.af || typeof(af) !== "function") {
          * @api private
          */
 
-        function findHandlers(element, event, fn, selector) {
-            event = parse(event);
-            if (event.ns)
-                var matcher = matcherFor(event.ns);
+        function findHandlers(element, event, fn, selector,keepEnd) {
+            event = parse(event,keepEnd);
             return (handlers[afmid(element)] || []).filter(function(handler) {
-                return handler && (!event.e || handler.e === event.e) && (!event.ns || matcher.test(handler.ns)) && (!fn || handler.fn === fn || (typeof handler.fn === "function" && typeof fn === "function" && handler.fn === fn)) && (!selector || handler.sel === selector);
+                return handler && (!event.e || handler.e === event.e) && (!event.ns || handler.ns.indexOf(event.ns)!==0) && (!fn || handler.fn === fn || (typeof handler.fn === "function" && typeof fn === "function" && handler.fn === fn)) && (!selector || handler.sel === selector);
             });
         }
         /**
@@ -2215,11 +2280,13 @@ if (!window.af || typeof(af) !== "function") {
          * @api private
          */
 
-        function parse(event) {
+        function parse(event,skipPop) {
             var parts = ("" + event).split(".");
+            if(skipPop!==true)
+                parts.pop();
             return {
-                e: parts[0],
-                ns: parts.slice(1).sort().join(" ")
+                e: event,
+                ns: parts.join(".")
             };
         }
         /**
@@ -2285,7 +2352,6 @@ if (!window.af || typeof(af) !== "function") {
                 set.push(handler);
                 element.addEventListener(handler.e, proxyfn, false);
             });
-            element=null;
         }
 
         /**
@@ -2302,13 +2368,12 @@ if (!window.af || typeof(af) !== "function") {
 
             var id = afmid(element);
             eachEvent(events || "", fn, function(event, fn) {
-                findHandlers(element, event, fn, selector).forEach(function(handler) {
+                findHandlers(element, event, fn, selector,true).forEach(function(handler) {
                     delete handlers[id][handler.i];
                     element.removeEventListener(handler.e, handler.proxy, false);
                 });
             });
         }
-
         $.event = {
             add: add,
             remove: remove
@@ -2500,7 +2565,7 @@ if (!window.af || typeof(af) !== "function") {
         };
         /**
         * Removes event listeners for .on()
-        * If selector is undefined or a function, we call unbind, otherwise it"s undelegate
+        * If selector is undefined or a function, we call unbind, otherwise it's undelegate
             ```
             $().off("click","p",callback); //Remove callback function for click events
             $().off("click","p") //Remove all click events
@@ -2563,7 +2628,7 @@ if (!window.af || typeof(af) !== "function") {
          * The following are for objects and not DOM nodes
          * @api private
          */
-        
+
         /*
          * Bind an event to an object instead of a DOM Node
            ```
@@ -2822,6 +2887,16 @@ if (!window.af || typeof(af) !== "function") {
             };
         });
 
+        $.Deferred = function(){
+            return {
+                reject:function(){},
+                resolve:function(){},
+                promise:{
+                    then:function(){},
+                    fail:function(){}
+                }
+            };
+        };
         /**
          * End of APIS
          * @api private

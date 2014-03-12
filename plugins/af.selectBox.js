@@ -1,8 +1,9 @@
 /**
- * @copyright: 2011 Intel
- * @description:  This script will replace all drop downs with friendly select controls.  Users can still interact
+ * copyright: 2011 Intel
+ * description:  This script will replace all drop downs with friendly select controls.  Users can still interact
  * with the old drop down box as normal with javascript, and this will be reflected
  */
+
  /* global af*/
  /* global numOnly*/
 (function($) {
@@ -203,11 +204,11 @@
                 modalMask.append(container);
                 if ($afui.length > 0) $afui.append(modalMask);
                 else document.body.appendChild(modalMask.get(0));
-
                 that.scroller = $.query("#afSelectBoxfix").scroller({
                     scroller: false,
                     verticalScroll: true,
-                    vScrollCSS: "jqselectscrollBarV"
+                    vScrollCSS: "afselectscrollBarV",
+                    hasParent:true
                 });
 
                 $("#afModalMask").on("click",function(e){
