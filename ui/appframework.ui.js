@@ -37,11 +37,7 @@
             that.autoLaunch=false;
         }
 
-        if ($("#afui").length === 1) {
-            setupCustomTheme();
-        }
-
-        var setupAFDom=function(){
+        var setupAFDom = function() {
             //boot touchLayer
             //create afui element if it still does not exist
             var afui = document.getElementById("afui");
@@ -114,9 +110,14 @@
                 } else if ($.os.blackberry||$.os.blackberry10||$.os.playbook) {
                     $("#afui").addClass("bb");
                     that.backButtonText = "Back";
-                } else if ($.os.ios7)
+                } else if ($.os.ios7){
                     $("#afui").addClass("ios7");
-                else if ($.os.ios)
+                    if(that.overlayStatusbar){
+                        that.ready(function(){
+                            $(".header").addClass("overlayStatusbar");
+                        });
+                    }
+                } else if ($.os.ios)
                     $("#afui").addClass("ios");
                 else if($.os.tizen)
                     $("#afui").addClass("tizen");
@@ -190,6 +191,7 @@
         handheldMinWidth: "768",
         trimBackButtonText: true,
         useOSThemes: true,
+        overlayStatusbar: false,
         lockPageBounce: false,
         animateHeaders: true,
         useAutoPressed: true,
@@ -202,9 +204,11 @@
             var that=this;
             if (this.autoLaunch) {
                 if(this.isIntel){
-                    $(document).one("intel.xdk.device.ready",function(){
+                    var xdkLaunch=function(){
                         that.launch();
-                    });
+                        document.removeEventListener(xdkLaunch);
+                    };
+                    document.addEventListener("intel.xdk.device.ready",xdkLaunch);
                 }
                 else {
                     this.launch();
@@ -884,7 +888,15 @@
          */
         updateNavbarElements: function(elems) {
             if (this.prevFooter) {
-                if (this.prevFooter.data("parent")) this.prevFooter.appendTo("#" + this.prevFooter.data("parent"));
+                if (this.prevFooter.data("parent")){
+                    var useScroller = this.scrollingDivs.hasOwnProperty(this.prevFooter.data("parent"));
+                    if($.feat.nativeTouchScroll||$.os.desktop || !useScroller ){
+                        this.prevFooter.appendTo("#" + this.prevFooter.data("parent"));
+                    }
+                    else {
+                        this.prevFooter.appendTo($("#" + this.prevFooter.data("parent")).find(".afScrollPanel"));
+                    }
+                }
                 else this.prevFooter.appendTo("#afui");
             }
             if (!$.is$(elems)) //inline footer
@@ -933,11 +945,19 @@
             if (elems === this.prevHeader) return;
             this._currentHeaderID=elems.prop("id");
             if (this.prevHeader) {
+                var useScroller = this.scrollingDivs.hasOwnProperty(this.prevHeader.data("parent"));
                 //Let's slide them out
                 $.query("#header").append(elems);
                 //Do not animate - sometimes they act funky
                 if (!$.ui.animateHeaders) {
-                    if (that.prevHeader.data("parent")) that.prevHeader.appendTo("#" + that.prevHeader.data("parent"));
+                    if (that.prevHeader.data("parent")){                        
+                        if($.feat.nativeTouchScroll||$.os.desktop || !useScroller ){
+                            this.prevHeader.appendTo("#" + this.prevHeader.data("parent"));
+                        }
+                        else {
+                            this.prevHeader.appendTo($("#" + this.prevHeader.data("parent")).find(".afScrollPanel"));
+                        }
+                    }
                     else that.prevHeader.appendTo("#afui");
                     that.prevHeader = elems;
                     return;
@@ -958,7 +978,14 @@
                     time: that.transitionTime,
                     delay: numOnly(that.transitionTime) / 5 + "ms",
                     complete: function() {
-                        if (that.prevHeader.data("parent")) that.prevHeader.appendTo("#" + that.prevHeader.data("parent"));
+                        if (that.prevHeader.data("parent")){                        
+                            if($.feat.nativeTouchScroll||$.os.desktop || !useScroller ){
+                                that.prevHeader.appendTo("#" + that.prevHeader.data("parent"));
+                            }
+                            else {
+                                that.prevHeader.appendTo($("#" + that.prevHeader.data("parent")).find(".afScrollPanel"));
+                            }
+                        }
                         else that.prevHeader.appendTo("#afui");
                         that.prevHeader.removeClass("ignore");
                         that.css3animate(that.prevHeader, {
@@ -1176,7 +1203,7 @@
                     modalParent.find("#modalHeader").append(elemsToCopy.filter("header")).show();
                 } else { // add default header with close
                     modalParent.find("#modalHeader").append(
-                        $.create("header", {className:"header"}).append(
+                        $.create("header", {}).append(
                             $.create("h1", {html:$panel.data("title")}).get(0))
                         .append(
                             $.create("a", {className:"button icon close"}).attr("onclick","$.ui.hideModal()").get(0)
@@ -1477,8 +1504,7 @@
             //check for custom footer
             var that = this;
             var hasFooter = what.getAttribute("data-footer");
-            var hasHeader = what.getAttribute("data-header");
-
+            var hasHeader = what.getAttribute("data-header");            
             //$asap removed since animations are fixed in css3animate
             if (hasFooter && hasFooter.toLowerCase() === "none") {
                 that.toggleNavMenu(false);
@@ -1486,7 +1512,7 @@
             } else {
                 that.toggleNavMenu(true);
             }
-            if (hasFooter && that.customFooter !== hasFooter) {
+            if (hasFooter && that.customFooter !== hasFooter) {                
                 that.customFooter = hasFooter;
                 that.updateNavbarElements(hasFooter);
             } else if (hasFooter !== that.customFooter) {
@@ -1513,7 +1539,7 @@
 
             //Load inline footers
             var inlineFooters = $(what).find("footer");
-            if (inlineFooters.length > 0) {
+            if (inlineFooters.length > 0) {                
                 that.customFooter = what.id;
                 inlineFooters.data("parent", what.id);
                 that.updateNavbarElements(inlineFooters);
@@ -1578,6 +1604,8 @@
          */
         parseScriptTags: function(div) {
             if (!div) return;
+            if(!$.fn||$.fn.namespace!=="appframework") return;
+
             $.parseJS(div);
         },
         /**
@@ -1728,6 +1756,7 @@
          * @api private
          */
         loadContentData: function(what, newTab, back) {
+
             var prevId, el, val, slashIndex;
             if (back) {
                 if (this.history.length > 0) {
@@ -1827,15 +1856,18 @@
                         } else
                             urlHash = that.addContentDiv(urlHash, xmlhttp.responseText, anchor.title ? anchor.title : target, refresh, refreshFunction);
                     } else {
-                        that.updatePanel("afui_ajax", xmlhttp.responseText);
-                        $.query("#afui_ajax").get(0).setAttribute("data-title",anchor.title ? anchor.title : target);
+
+                        that.updatePanel("afui_ajax", xmlhttp.responseText);                                                
+                        $.query("#afui_ajax").attr("data-title",anchor.title ? anchor.title : target);
                         that.loadContent("#afui_ajax", newTab, back, transition);
+                        
                         doReturn = true;
                     }
                     //Let's load the content now.
                     //We need to check for any script tags and handle them
                     var div = document.createElement("div");
                     $(div).html(xmlhttp.responseText);
+
                     that.parseScriptTags(div);
 
                     if (doReturn) {
@@ -2378,15 +2410,16 @@
 
 (function($) {
     "use strict";
-    $(document).one("intel.xdk.device.ready", function() { //in intel xdk, we need to undo the height stuff since it causes issues.
+    var xdkDeviceReady=function(){
         $.ui.isIntel=true;
         setTimeout(function() {
             document.getElementById("afui").style.height = "100%";
             document.body.style.height = "100%";
             document.documentElement.style.minHeight = window.innerHeight;
         }, 30);
-
-    });
+        document.removeEventListener(xdkDeviceReady);
+    };
+    document.addEventListener("intel.xdk.device.ready",xdkDeviceReady);
     //Fix an ios bug where scrolling will not work with rotation
     if ($.feat.nativeTouchScroll) {
         document.addEventListener("orientationchange", function() {
