@@ -172,13 +172,13 @@
              * instead of css3
              */
             _scrollToTop: function (time) {
-                this._scrollTo({
+                this.scrollBy({
                     x: 0,
                     y: 0
                 }, time);
             },
             _scrollToBottom: function (time) {
-                this._scrollTo({
+                this.scrollBy({
                     x: 0,
                     y: this.el.scrollHeight - this.el.offsetHeight
                 }, time);
@@ -263,7 +263,7 @@
                 }
                 var el = afEl.get(0);
 
-                this.refreshContainer = $("<div style='overflow:hidden;height:0;width:100%;display:none;background:inherit;-webkit-backface-visibility: hidden !important;'></div>");
+                this.refreshContainer = $("<div class='p2r' style='overflow:hidden;height:0;width:100%;display:none;background:inherit;-webkit-backface-visibility: hidden !important;'></div>");
                 $(this.el).prepend(this.refreshContainer.prepend(el));
                 this.refreshContainer = this.refreshContainer[0];
             },
@@ -490,11 +490,23 @@
                 return $(this.el).find(".p2rhack").remove();
             var el=$(this.el).find(".p2rhack");
             if(el.length === 0){
-                $(this.el).append("<div class='p2rhack' style='position:absolute;width:1px;height:1px;opacity:0;background:transparent;z-index:-1;-webkit-transform:translate3d(-1px,0,0);'></div>");
+                $(this.el).append("<div class='p2rhack' style='position:relative;height:0;width:100%;opacity:0;background:transparent;z-index:-1;-webkit-transform:translate3d(-1px,0,0);'></div>");
                 el=$(this.el).find(".p2rhack");
             }
-
-            el.css("top",this.el.scrollHeight+this.refreshHeight+1+"px");
+            if(this.el.scrollHeight === this.el.clientHeight) {
+                var children = Array.prototype.slice.call(this.el.children);
+                var height = 0;
+                children.forEach(function(child) {
+                    if(!$(child).hasClass("p2rhack") && !$(child).hasClass("p2r")) {
+                        height += child.scrollHeight;
+                    }
+                });
+                if(this.el.scrollHeight > height) {
+                    el.css("height",this.el.scrollHeight-height+1+"px");
+                } else {
+                    el.css("height",0+"px");
+                }
+            }
         };
         nativeScroller.prototype.onTouchStart = function (e) {
             this.lastScrollInfo= {
