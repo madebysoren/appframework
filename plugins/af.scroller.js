@@ -593,6 +593,10 @@
                     e.preventDefault();
                 }
             }
+            
+            if(this.refresh && newcY > 0 && newcY < this.refreshHeight) {
+                this.refreshContainer.style.top = (-this.refreshHeight+newcY)+"px";
+            }
 
             //check for trigger
             if (this.refresh && (this.el.scrollTop < -this.refreshHeight)) {
@@ -640,18 +644,22 @@
                 this.el.scrollTop+=this.yReset;
                 this.el.scrollLeft+=this.xReset;
             }
-            if (triggered&&this.refresh) {
+            if (this.refresh) {
                 //lock in place
                 //that.refreshContainer.style.position = "";
                 //iOS has a bug that it will jump when scrolling back up, so we add a fake element while we reset the pull to refresh position
                 //then we remove it right away
-                var tmp=$.create("<div style='height:"+this.el.clientHeight+this.refreshHeight+"px;width:1px;-webkit-transform:translated3d(-1px,0,0)'></div>");
-                $(this.el).append(tmp);
-                this.refreshContainer.style.top = "0px";
-                this.refreshContainer.style.position="";
-                setTimeout(function(){
-                    tmp.remove();
-                });
+                if(triggered) {
+                    var tmp=$.create("<div style='height:"+this.el.clientHeight+this.refreshHeight+"px;width:1px;-webkit-transform:translated3d(-1px,0,0)'></div>");
+                    $(this.el).append(tmp);
+                    this.refreshContainer.style.top = "0px";
+                    this.refreshContainer.style.position="";
+                    setTimeout(function(){
+                        tmp.remove();
+                    });
+                } else {
+                    this.refreshContainer.style.top = (-this.refreshHeight)+"px";
+                }
             }
 
             //this.dY = this.cY = 0;
