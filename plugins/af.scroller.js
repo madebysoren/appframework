@@ -594,8 +594,12 @@
                 }
             }
             
-            if(this.refresh && newcY > 0 && newcY < this.refreshHeight) {
-                this.refreshContainer.style.top = (-this.refreshHeight+newcY)+"px";
+            if(this.refresh) {
+                if(this.el.scrollTop + newcY > 0 && this.el.scrollTop + newcY < this.refreshHeight) {
+                    this.refreshContainer.style.top = (-this.refreshHeight+this.el.scrollTop+newcY)+"px";
+                } else {
+                    this.refreshContainer.style.top = (-this.el.scrollTop-this.refreshHeight)+"px";
+                }
             }
 
             //check for trigger
@@ -658,7 +662,8 @@
                         tmp.remove();
                     });
                 } else {
-                    this.refreshContainer.style.top = (-this.refreshHeight)+"px";
+                    this.refreshContainer.style.top = (-(this.el.scrollTop > 0 ? this.el.scrollTop : 0)-this.refreshHeight)+"px";
+                    this.refreshContainer.style.position="absolute";
                 }
             }
 
